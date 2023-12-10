@@ -24,28 +24,33 @@ import sqlconnection.db.DataAccessLayer;
  *
  * @author Ramez
  */
-public class Server {
+public class Server extends Thread{
 
 ServerSocket serverSocket;
  public Server()
  {
     try {
         serverSocket = new ServerSocket(5005);
+        start();
     } catch (IOException ex) {
         Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
     }
-    while(true)
-    {
-         Socket s;
-        try {
-            s = serverSocket.accept();
-            new TicTacToeHandler(s);
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        }
-          
-    }
+
  }
+    public void run(){
+        while(true)
+       {
+            Socket s;
+           try {
+               s = serverSocket.accept();
+               new TicTacToeHandler(s);
+           } catch (IOException ex) {
+               Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+           }
+
+       }
+ 
+    }
 
     
 }
@@ -104,7 +109,7 @@ class TicTacToeHandler extends Thread
             
                
                 if(specificPlayerHandler!=null){
-                TicTacToeHandler.player.ps.println((result>0)?"200 OK":"404 ERROR");
+                    TicTacToeHandler.player.ps.println((result>0)?"200 OK":"404 ERROR");
                 }
             
          }

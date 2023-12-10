@@ -1,9 +1,11 @@
 package tictactoeserver;
 
 import java.net.ServerSocket;
+import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import server.Server;
 
 public class UI extends BorderPane {
 
@@ -11,6 +13,7 @@ public class UI extends BorderPane {
     protected final Button startServerButton;
     protected final Button stopServerButton;
     ServerSocket serverSocket;
+    Server server;
 
 
     public UI() {
@@ -38,6 +41,12 @@ public class UI extends BorderPane {
         startServerButton.setPrefHeight(32.0);
         startServerButton.setPrefWidth(131.0);
         startServerButton.setText("Start Server");
+        startServerButton.addEventHandler(ActionEvent.ACTION, (event) -> {
+            if(server==null)
+            server=new Server();
+            
+        });
+
 
         stopServerButton.setLayoutX(96.0);
         stopServerButton.setLayoutY(213.0);
@@ -45,6 +54,13 @@ public class UI extends BorderPane {
         stopServerButton.setPrefHeight(32.0);
         stopServerButton.setPrefWidth(130.0);
         stopServerButton.setText("Stop Server");
+        stopServerButton.addEventHandler(ActionEvent.ACTION, (event) -> {
+            if(server!=null){
+                server.stop();
+                server=null;
+            }
+            
+        });
         setCenter(pane);
 
         pane.getChildren().add(startServerButton);
