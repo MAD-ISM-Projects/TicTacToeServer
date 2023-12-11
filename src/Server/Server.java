@@ -16,7 +16,8 @@ import java.net.Socket;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sqlconnection.db.DataAccessLayer;
+import sqlconnection.db.DBHandler;
+import sqlconnection.db.DBHandler;
 
 
 
@@ -24,6 +25,7 @@ import sqlconnection.db.DataAccessLayer;
  *
  * @author Ramez
  */
+
 public class Server extends Thread{
 
 ServerSocket serverSocket;
@@ -83,15 +85,29 @@ class TicTacToeHandler extends Thread
                       TicTacToeHandler currentPlayer=TicTacToeHandler.player;
                        try {
                            
-                        String clientRequest = dis.readLine();
+                        String clientRequestBody = dis.readLine();
                         //ToDo: implement DataAccessLayer Interface then re initialize the statement below
                         //      with an object of the class  
-                        DataAccessLayer dbHandler = null ;
-                        JsonObject jsonObject = new Gson().fromJson(clientRequest, JsonObject.class); 
+                        DBHandler dbHandler = new DBHandler();
+                        JsonObject jsonObject = new Gson().fromJson(clientRequestBody, JsonObject.class); 
+                        String clientRequest=jsonObject.get("request").getAsString();
+                        int result=0;
                         DTOPlayer player=new DTOPlayer();
-                        player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString()); 
-                        player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
-                       int result= dbHandler.insertPlayer(player);
+                        switch(clientRequestBody){
+                            case ("signUp"):
+                                player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString()); 
+                                player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
+                                result= dbHandler.insertPlayer(player);     
+                                break;
+                             case("signIn"):
+                                player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString()); 
+                                player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
+                                result= dbHandler.isPlayerSignedUp(player); 
+                                 
+                             break;
+                                
+                        }
+
 //                            jsonString="{\"player\":{\"name\":\""+yourNameTextField.getText()+"\""
 //                                         + ","
 //                                         + "\"password\":\""+passwordTextField.getText()+"\"}}";                         
@@ -109,7 +125,7 @@ class TicTacToeHandler extends Thread
             
                
                 if(specificPlayerHandler!=null){
-                    TicTacToeHandler.player.ps.println((result>0)?"200 OK":"404 ERROR");
+                    TicTacToeHandler.player.ps.println(result);
                 }
             
          }
