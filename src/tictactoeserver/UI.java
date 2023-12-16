@@ -21,8 +21,6 @@ public class UI extends BorderPane {
         pane = new Pane();
         startServerButton = new Button();
         stopServerButton = new Button();
-
-        setId("pane");
         setMaxHeight(USE_PREF_SIZE);
         setMaxWidth(USE_PREF_SIZE);
         setMinHeight(USE_PREF_SIZE);
@@ -42,10 +40,10 @@ public class UI extends BorderPane {
         startServerButton.setPrefWidth(131.0);
         startServerButton.setText("Start Server");
         startServerButton.addEventHandler(ActionEvent.ACTION, (event) -> {
-            if(server==null)
+        
             server=new Server();
-            
-        });
+        });    
+       
 
 
         stopServerButton.setLayoutX(96.0);
@@ -55,10 +53,9 @@ public class UI extends BorderPane {
         stopServerButton.setPrefWidth(130.0);
         stopServerButton.setText("Stop Server");
         stopServerButton.addEventHandler(ActionEvent.ACTION, (event) -> {
-            if(server!=null){
-                server.stop();
-                server=null;
-            }
+            
+                server.stopServer();
+            
             
         });
         setCenter(pane);
