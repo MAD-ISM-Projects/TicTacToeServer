@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane id="AnchorPane" prefHeight="500.0" prefWidth="850.0" style="-fx-background-color: #34365C;" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tictacteo.FXMLDocumentController">
+   <children>
+      <Label fx:id="label" layoutX="126" layoutY="120" minHeight="16" minWidth="69" />
+      <Text fx:id="tictoeText" fill="#8b91b5" layoutX="24.0" layoutY="181.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Tic       Toe" wrappingWidth="324.765625">
+         <font>
+            <Font name="Times New Roman Bold Italic" size="70.0" />
+         </font>
+      </Text>
+      <Text fx:id="miniText" fill="#8b91b5" layoutX="37.0" layoutY="279.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Server" wrappingWidth="121.9999908208847">
+         <font>
+            <Font name="Times New Roman Italic" size="45.0" />
+         </font>
+      </Text>
+      <Text fx:id="gamText" fill="#8b91b5" layoutX="161.0" layoutY="282.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Luncher" wrappingWidth="199.94921875">
+         <font>
+            <Font name="Times New Roman Bold Italic" size="55.0" />
+         </font>
+      </Text>
+      <Text fill="#ff8fda" layoutX="126.0" layoutY="181.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Tac">
+         <font>
+            <Font name="Times New Roman Bold Italic" size="70.0" />
+         </font>
+      </Text>
+      <ImageView fitHeight="248.0" fitWidth="345.0" layoutX="445.0" layoutY="154.0" pickOnBounds="true" preserveRatio="true" />
+      <ImageView fitHeight="318.0" fitWidth="316.0" layoutX="437.0" layoutY="118.0" fx:id="xoImage">
+         <image>
+            <Image url="@../tictactoeserver/xoImg.png" />
+         </image>
+      </ImageView>
+      <Button fx:id="startStopButton" layoutX="98.0" layoutY="334.0" prefHeight="51.0" prefWidth="145.0" style="-fx-background-radius: 15;" text="Start" textFill="#aea5b8">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>

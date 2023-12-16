@@ -34,7 +34,7 @@ public class DBHandler implements DataAccessLayer{
             Connection con=DriverManager.getConnection("jdbc:derby://localhost:1527/PlayersAndGamplays","root","root");
             // check where the player is already registered or not since if this methode return 0 in this case but if not the player will signed up successfully with result>0
             if(isPlayerSignedUp(player)>0) {result++; return result;}
-            PreparedStatement stmt=con.prepareStatement("INSERT INTO ROOT.PLAYERS (NAME,PASSWORD) values ('?','?');");
+            PreparedStatement stmt=con.prepareStatement("INSERT INTO ROOT.PLAYERS (NAME,PASSWORD) values (?,?)");
             String name= player.getName();
             String password= player.getPassword();
             stmt.setString(1,name);

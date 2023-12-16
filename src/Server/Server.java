@@ -35,12 +35,26 @@ ServerSocket serverSocket;
         serverSocket = new ServerSocket(5005);
         start();
     } catch (IOException ex) {
-        Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        System.out.println("issue in server socket");
+        stopServer();
     }
 
  }
+     private volatile boolean running = true;
+
+ public void stopServer() {
+        running =false;
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void run(){
-        while(true)
+        while(running)
        {
             Socket s;
            try {
@@ -67,23 +81,12 @@ class TicTacToeHandler extends Thread
         public TicTacToeHandler(Socket cs)
         {
         
-            try {
-                //get data from client/s
-                dis = new DataInputStream(cs.getInputStream());
-                //send data to client/s
-                ps = new PrintStream(cs.getOutputStream());
-            } catch (IOException ex) {
-                Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-         TicTacToeHandler.player=this;
-         
-         start();
-        }
-                 @Override
-                  public void run(){
+            try (
+               DataInputStream dis = new DataInputStream(cs.getInputStream());
+               PrintStream ps = new PrintStream(cs.getOutputStream())){
+                              
                       TicTacToeHandler currentPlayer=TicTacToeHandler.player;
-                       try {
+                       
                            
                         String clientRequestBody = dis.readLine();
                         //ToDo: implement DataAccessLayer Interface then re initialize the statement below
@@ -93,7 +96,7 @@ class TicTacToeHandler extends Thread
                         String clientRequest=jsonObject.get("request").getAsString();
                         int result=0;
                         DTOPlayer player=new DTOPlayer();
-                        switch(clientRequestBody){
+                        switch(clientRequest){
                             case ("signUp"):
                                 player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString()); 
                                 player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
@@ -113,10 +116,19 @@ class TicTacToeHandler extends Thread
 //                                         + "\"password\":\""+passwordTextField.getText()+"\"}}";                         
                         reply(result,currentPlayer);
 
-                   } catch (IOException ex) {
-                       Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
-                   }
-                  }
+                   
+                   
+                
+            }
+             catch (IOException ex) {
+                Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+         TicTacToeHandler.player=this;
+         
+        
+        }
+ 
             
          void reply(int result,TicTacToeHandler specificPlayerHandler)
          {
@@ -126,6 +138,7 @@ class TicTacToeHandler extends Thread
                
                 if(specificPlayerHandler!=null){
                     TicTacToeHandler.player.ps.println(result);
+                    this.stop();
                 }
             
          }

@@ -20,10 +20,10 @@ public class TicTacToeServer extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root =new UI();
+        Parent root =new StartPageBase();
         
-        Scene scene = new Scene(root);
-        
+        Scene scene = new Scene(root,800,550);
+                
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
