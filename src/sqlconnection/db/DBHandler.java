@@ -52,15 +52,24 @@ public class DBHandler implements DataAccessLayer{
 
     @Override
     public int isPlayerSignedUp(DTOPlayer player) {
+        // result will still be a value of 0 untill he is found in the data base
         int result = 0;
         try {
             DriverManager.registerDriver(new ClientDriver());
             Connection con=DriverManager.getConnection("jdbc:derby://localhost:1527/PlayersAndGamplays","root","root");
-            PreparedStatement stmt=con.prepareStatement("SELECT * FROM ROOT.PLAYERS WHERE \"NAME\" = ? AND PASSWORD = ?;");
+            PreparedStatement stmt=con.prepareStatement("SELECT * FROM ROOT.PLAYERS WHERE NAME = ? AND PASSWORD = ?");
             stmt.setString(1,player.getName());
             stmt.setString(2,player.getPassword());
-            ResultSet rs = stmt.executeQuery() ;       
-            if(rs.next())  return ++result;
+            ResultSet rs = stmt.executeQuery() ;  
+            // result will be 1 if he already exists
+            if(rs.next()) 
+            {
+                stmt.close();
+                con.close();
+                return ++result;
+
+            
+            }
 
             
             stmt.close();

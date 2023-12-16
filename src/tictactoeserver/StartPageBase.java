@@ -23,7 +23,6 @@ public class StartPageBase extends AnchorPane {
     protected final Button startStopButton;
     ServerSocket serverSocket;
     Server server;
-    String btnText="Start";
 
     public StartPageBase() {
 
@@ -99,21 +98,19 @@ public class StartPageBase extends AnchorPane {
         startStopButton.setPrefHeight(51.0);
         startStopButton.setPrefWidth(145.0);
         startStopButton.setStyle("-fx-background-radius: 15;");
-        startStopButton.setText(btnText);
+        startStopButton.setText("Start");
         startStopButton.setTextFill(javafx.scene.paint.Color.valueOf("#aea5b8"));
         startStopButton.setFont(new Font(24.0));
         startStopButton.addEventHandler(ActionEvent.ACTION, (event) -> {
-           if(btnText=="Start"){ 
-               btnText="Stop";
+           if(startStopButton.getText()=="Start"){ 
+               startStopButton.setText("Stop");
                server=new Server();
 
                
            }
            else{                
-               btnText="Start";
+               startStopButton.setText("Start");
                server.stopServer();
-
-           
            }
         }); 
         getChildren().add(label);
