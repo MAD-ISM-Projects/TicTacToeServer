@@ -25,6 +25,17 @@ interface DataAccessLayer{
 }
 
 public class DBHandler implements DataAccessLayer{
+    private Connection connection;
+    PreparedStatement pst;
+    public DBHandler(){
+           try {
+            DriverManager.registerDriver(new ClientDriver());
+            connection = DriverManager.getConnection("jdbc:derby://localhost:1527/players", "root", "root");
+
+        } catch (SQLException ex) {
+            Logger.getLogger(DataAccessLayer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     @Override
     public int insertPlayer(DTOPlayer player) {
