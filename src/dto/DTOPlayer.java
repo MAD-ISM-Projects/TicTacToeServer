@@ -5,6 +5,8 @@
  */
 package dto;
 
+import com.google.gson.Gson;
+
 /**
  *
  * @author Ramez
@@ -15,6 +17,14 @@ public class DTOPlayer {
     private String password;
     private int score;
     private String status;
+    public DTOPlayer(){}
+        public DTOPlayer( String name, String password, int score, String status) {
+        this.ip = ip;
+        this.name = name;
+        this.password = password;
+        this.score = score;
+        this.status = status;
+    }
 
     public String getIp() {
         return ip;
@@ -55,15 +65,13 @@ public class DTOPlayer {
     public void setStatus(String status) {
         this.status = status;
     }
-
-    public DTOPlayer( String name, String password, int score, String status) {
-        this.ip = ip;
-        this.name = name;
-        this.password = password;
-        this.score = score;
-        this.status = status;
+    public String getJson(){
+        Gson gson = new Gson();
+        return gson.toJson(this);
+        
     }
-    public DTOPlayer(){}
+
+
 
  
 

@@ -54,7 +54,46 @@ public class DBHandler{
         }
         return rs;
     }
-   
-        
+ 
+       public int signIn(DTOPlayer player) throws SQLException {
+        String sqlSelect = "SELECT 1 FROM ROOT.PLAYERS WHERE NAME = ? AND PASSWORD = ?";
+
+        try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
+            pst.setString(1, player.getName());
+            pst.setString(2, player.getPassword());
+            
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                if (count > 0) {
+                    // Credentials are valid, user exists
+                    System.out.println("Sign in successful");
+                    /*calling the updateStatus()*/
+                    updateStatus(player.getName(), "online");
+                    return 1;
+                } else {
+                    // No matching user found
+                    System.out.println("Sign in failed: Invalid credentials");
+                    return -1;
+                }
+            } else {
+                // Error in query execution
+                System.out.println("Sign in failed: Database query error");
+                return -1;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
+        }
+    }
+
+     private void updateStatus(String playerName, String status) throws SQLException {
+        String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
+        try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            updateStatement.setString(1, status);
+            updateStatement.setString(2, playerName);
+            updateStatement.executeUpdate();
+        }
+    }   
     
 }
