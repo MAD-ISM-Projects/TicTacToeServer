@@ -34,20 +34,25 @@ public class DBHandler{
         }
     }
 
-       public void signUp(DTOPlayer player) throws SQLException {
+       public int signUp(DTOPlayer player) throws SQLException {
 
-        String sqlinsert = "INSERT INTO ROOT.\"players\"(ROOT.\"players\".\"ip\",ROOT.\"players\".\"name\",ROOT.\"players\".\"password\",ROOT.\"players\".\"status\")VALUES (?,?,?,?)";
+      //  String sqlinsert = "INSERT INTO ROOT.\"players\"(ROOT.\"players\".\"ip\",ROOT.\"players\".\"name\",ROOT.\"players\".\"password\",ROOT.\"players\".\"score\")VALUES (?,?,?,?)";
+        String sqlinsert="INSERT INTO ROOT.PLAYERS (IP,NAME,PASSWORD,STATUS,SCORE) VALUES (?,?,?,?,?)";
         PreparedStatement pst = connection.prepareStatement(sqlinsert);
         pst.setString(1, player.getIp());
         pst.setString(2, player.getName());
         pst.setString(3, player.getPassword());
-        pst.setString(4, player.getStatus());
+        
+        pst.setString(4, "online");
+        pst.setString(5, String.valueOf(player.getScore()));
+
         int rs = pst.executeUpdate();
         if (rs == 0) {
             System.out.println("insert faild");
         } else {
             System.out.println("insert succeded");
         }
+        return rs;
     }
    
         

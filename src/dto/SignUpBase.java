@@ -13,21 +13,12 @@ public class SignUpBase {
         private String name;
         private String password;
         private String status;
-        private String confirmPassword;
-
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
-
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
-    }
+        
 
     public SignUpBase(String name, String password, String status, String confirmPassword) {
         this.name = name;
         this.password = password;
         this.status = status;
-        this.confirmPassword = confirmPassword;
     }
 
     public String getName() {

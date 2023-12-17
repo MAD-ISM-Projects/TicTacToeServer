@@ -56,7 +56,7 @@ public class DTOPlayer {
         this.status = status;
     }
 
-    public DTOPlayer(String ip, String name, String password, int score, String status) {
+    public DTOPlayer( String name, String password, int score, String status) {
         this.ip = ip;
         this.name = name;
         this.password = password;

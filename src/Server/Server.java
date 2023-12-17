@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -76,16 +77,19 @@ class TicTacToeHandler extends Thread
         PrintStream ps;
         static TicTacToeHandler player;
         String jsonObject;
+                static Vector<TicTacToeHandler> clientsVector =
+        new Vector<>();
 
 
         public TicTacToeHandler(Socket cs)
         {
+
         
             try (
                DataInputStream dis = new DataInputStream(cs.getInputStream());
                PrintStream ps = new PrintStream(cs.getOutputStream())){
                               
-                      TicTacToeHandler currentPlayer=TicTacToeHandler.player;
+                     // TicTacToeHandler currentPlayer=TicTacToeHandler.player;
                        
                            
                         String clientRequestBody = dis.readLine();
@@ -94,53 +98,55 @@ class TicTacToeHandler extends Thread
                         DBHandler dbHandler = new DBHandler();
                         JsonObject jsonObject = new Gson().fromJson(clientRequestBody, JsonObject.class); 
                         String clientRequest=jsonObject.get("request").getAsString();
-                        int result=0;
                         DTOPlayer player=new DTOPlayer();
+                        TicTacToeHandler.clientsVector.add(this);
+
+                        int result;
+
                         switch(clientRequest){
                             case ("signUp"):
                                 player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString()); 
                                 player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
-                                result= dbHandler.insertPlayer(player);     
+                               player.setIp(jsonObject.getAsJsonObject("player").get("ip").getAsString());
+                               player.setScore(0);
+                              // player.setStatus("online");
+                          try {
+                              result= dbHandler.signUp(player);
+                              sendMessageToAll(result);
+                              
+                          } catch (SQLException ex) {
+                              Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
+                          }
+                          
+                      
                                 break;
                              case("signIn"):
                                 player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString()); 
                                 player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
-                                result= dbHandler.isPlayerSignedUp(player); 
+                               // result= dbHandler.signUp(player); 
                                  
                              break;
                                 
                         }
-
-//                            jsonString="{\"player\":{\"name\":\""+yourNameTextField.getText()+"\""
-//                                         + ","
-//                                         + "\"password\":\""+passwordTextField.getText()+"\"}}";                         
-                        reply(result,currentPlayer);
-
-                   
-                   
+              
                 
             }
              catch (IOException ex) {
                 Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-         TicTacToeHandler.player=this;
-         
-        
+
         }
- 
-            
-         void reply(int result,TicTacToeHandler specificPlayerHandler)
+
+         void sendMessageToAll(int msg)
          {
-         // for(TicTacToeHandler ch : playersVector)
-          
-            
-               
-                if(specificPlayerHandler!=null){
-                    TicTacToeHandler.player.ps.println(result);
-                    this.stop();
-                }
-            
+        
+            for(int i=0 ; i<clientsVector.size() ; i++)
+            {
+                TicTacToeHandler clientHandler=clientsVector.get(i);
+                if(clientHandler!=null)
+                clientHandler.ps.println(msg);
+            }
          }
 
 }
