@@ -10,26 +10,18 @@ package dto;
  * @author Ramez
  */
 public class DTOPlayer {
-    private int id;
+    private String ip;
     private String name;
     private String password;
     private int score;
-    
-    public DTOPlayer(){}
+    private String status;
 
-    public DTOPlayer(int id, String name, String password, int score) {
-        this.id = id;
-        this.name = name;
-        this.password = password;
-        this.score = score;
+    public String getIp() {
+        return ip;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 
     public String getName() {
@@ -55,6 +47,25 @@ public class DTOPlayer {
     public void setScore(int score) {
         this.score = score;
     }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public DTOPlayer(String ip, String name, String password, int score, String status) {
+        this.ip = ip;
+        this.name = name;
+        this.password = password;
+        this.score = score;
+        this.status = status;
+    }
+    public DTOPlayer(){}
+
+ 
 
    
 }
