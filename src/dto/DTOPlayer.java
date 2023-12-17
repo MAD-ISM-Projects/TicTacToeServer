@@ -12,27 +12,27 @@ import com.google.gson.Gson;
  * @author Ramez
  */
 public class DTOPlayer {
-    private String ip;
+//    private String ip;
     private String name;
     private String password;
     private int score;
     private String status;
     public DTOPlayer(){}
         public DTOPlayer( String name, String password, int score, String status) {
-        this.ip = ip;
+//        this.ip = ip;
         this.name = name;
         this.password = password;
         this.score = score;
         this.status = status;
     }
 
-    public String getIp() {
-        return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
+//    public String getIp() {
+//        return ip;
+//    }
+//
+//    public void setIp(String ip) {
+//        this.ip = ip;
+//    }
 
     public String getName() {
         return name;
