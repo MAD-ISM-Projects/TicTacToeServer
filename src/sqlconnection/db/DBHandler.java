@@ -43,7 +43,7 @@ public class DBHandler{
         pst.setString(1, player.getName());
         pst.setString(2, player.getPassword());
         
-        pst.setString(3, "online");
+        pst.setString(3, "offline");
         pst.setString(4, String.valueOf(player.getScore()));
 
         int rs = pst.executeUpdate();
@@ -64,6 +64,7 @@ public class DBHandler{
             
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
+                updateStatus(player.getName(), "online");
                 return 1;
 //                String count = rs.getString(1);
 //                if (count > 0) {
