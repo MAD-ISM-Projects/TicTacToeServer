@@ -5,6 +5,8 @@
  */
 package dto;
 
+import com.google.gson.Gson;
+
 /**
  *
  * @author mayar
@@ -42,6 +44,11 @@ public class SignInBase {
         this.name = name;
         this.password = password;
         this.status = status;
+    }
+        public String getJson(){
+        Gson gson = new Gson();
+        return gson.toJson(this);
+        
     }
 
 }

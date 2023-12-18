@@ -37,14 +37,14 @@ public class DBHandler{
        public int signUp(DTOPlayer player) throws SQLException {
 
       //  String sqlinsert = "INSERT INTO ROOT.\"players\"(ROOT.\"players\".\"ip\",ROOT.\"players\".\"name\",ROOT.\"players\".\"password\",ROOT.\"players\".\"score\")VALUES (?,?,?,?)";
-        String sqlinsert="INSERT INTO ROOT.PLAYERS (IP,NAME,PASSWORD,STATUS,SCORE) VALUES (?,?,?,?,?)";
+        String sqlinsert="INSERT INTO ROOT.PLAYERS (NAME,PASSWORD,STATUS,SCORE) VALUES (?,?,?,?)";
         PreparedStatement pst = connection.prepareStatement(sqlinsert);
-        pst.setString(1, player.getIp());
-        pst.setString(2, player.getName());
-        pst.setString(3, player.getPassword());
+//        pst.setString(1, player.getIp());
+        pst.setString(1, player.getName());
+        pst.setString(2, player.getPassword());
         
-        pst.setString(4, "online");
-        pst.setString(5, String.valueOf(player.getScore()));
+        pst.setString(3, "online");
+        pst.setString(4, String.valueOf(player.getScore()));
 
         int rs = pst.executeUpdate();
         if (rs == 0) {
@@ -54,7 +54,47 @@ public class DBHandler{
         }
         return rs;
     }
-   
-        
+ 
+       public int signIn(DTOPlayer player) throws SQLException {
+        String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ? AND PASSWORD = ?";
+
+        try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
+            pst.setString(1, player.getName());
+            pst.setString(2, player.getPassword());
+            
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {
+                return 1;
+//                String count = rs.getString(1);
+//                if (count > 0) {
+//                    // Credentials are valid, user exists
+//                    System.out.println("Sign in successful");
+//                    /*calling the updateStatus()*/
+//                    updateStatus(player.getName(), "online");
+//                    return 1;
+//                } else {
+//                    // No matching user found
+//                    System.out.println("Sign in failed: Invalid credentials");
+//                    return -1;
+//                }
+            } else {
+                // Error in query execution
+                System.out.println("Sign in failed: Database query error");
+                return -1;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
+        }
+    }
+
+     private void updateStatus(String playerName, String status) throws SQLException {
+        String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
+        try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            updateStatement.setString(1, status);
+            updateStatement.setString(2, playerName);
+            updateStatement.executeUpdate();
+        }
+    }   
     
 }

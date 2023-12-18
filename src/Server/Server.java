@@ -87,7 +87,7 @@ class TicTacToeHandler extends Thread {
                 case "signUp":
                     player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString());
                     player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
-                    player.setIp(jsonObject.getAsJsonObject("player").get("ip").getAsString());
+//                    player.setIp(jsonObject.getAsJsonObject("player").get("ip").getAsString());
                     player.setScore(0);
 
                     try {
@@ -102,6 +102,15 @@ class TicTacToeHandler extends Thread {
                     player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString());
                     player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
                     // result= dbHandler.signUp(player); 
+                    
+                    try {
+                        result = dbHandler.signIn(player);
+                        sendMessageToAll(result);
+                        
+                    } catch (SQLException ex) {
+                        Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+
                     break;
             }
 
