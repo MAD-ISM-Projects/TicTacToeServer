@@ -10,6 +10,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import server.Server;
+import javafx.application.Platform;
+
 
 public class StartPageBase extends AnchorPane {
 
@@ -21,8 +23,8 @@ public class StartPageBase extends AnchorPane {
     protected final ImageView imageView;
     protected final ImageView xoImage;
     protected final Button startStopButton;
-    ServerSocket serverSocket;
-    Server server;
+    //ServerSocket serverSocket;
+      static Server server;
 
     public StartPageBase() {
 
@@ -113,6 +115,8 @@ public class StartPageBase extends AnchorPane {
                server.stopServer();
            }
         }); 
+
+        
         getChildren().add(label);
         getChildren().add(tictoeText);
         getChildren().add(miniText);
