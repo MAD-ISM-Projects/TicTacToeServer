@@ -104,17 +104,30 @@ public class StartPageBase extends AnchorPane {
         startStopButton.setTextFill(javafx.scene.paint.Color.valueOf("#aea5b8"));
         startStopButton.setFont(new Font(24.0));
         startStopButton.addEventHandler(ActionEvent.ACTION, (event) -> {
-           if(startStopButton.getText()=="Start"){ 
-               startStopButton.setText("Stop");
-               server=new Server();
+            if ("Start".equals(startStopButton.getText())) {
+                startStopButton.setText("Stop");
 
-               
-           }
-           else{                
-               startStopButton.setText("Start");
-               server.stopServer();
-           }
-        }); 
+                // Run server creation on a separate thread
+                new Thread(() -> {
+                    try {
+                        server = new Server();
+                    } catch (Exception e) {
+                        e.printStackTrace(); // Handle the exception appropriately
+                        Platform.runLater(() -> startStopButton.setText("Start"));
+                    }
+                }).start();
+            } else {
+                startStopButton.setText("Start");
+
+                // Run server stopping on the JavaFX Application Thread
+                Platform.runLater(() -> {
+                    if (server != null) {
+                        server.stopServer();
+                    }
+                });
+            }
+        });
+
 
         
         getChildren().add(label);

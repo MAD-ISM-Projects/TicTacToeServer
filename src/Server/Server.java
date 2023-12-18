@@ -42,16 +42,23 @@ public class Server extends Thread {
         }
     }
 
+
     public void run() {
         while (running) {
             try {
                 Socket clientSocket = serverSocket.accept();
                 new TicTacToeHandler(clientSocket, this);
             } catch (IOException ex) {
+                if (!running) {
+                    // If the server is not running, break out of the loop
+                    break;
+                }
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
+
+
 
     void registerClient(String playerName, TicTacToeHandler handler) {
         clientsMap.put(playerName, handler);
