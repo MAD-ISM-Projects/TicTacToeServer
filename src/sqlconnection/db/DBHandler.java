@@ -34,28 +34,50 @@ public class DBHandler{
         }
     }
 
-       public int signUp(DTOPlayer player) throws SQLException {
+     public int signUp(DTOPlayer player) {
+    try {
+        // Check if the player with the given name already exists
+        if (playerExists(player.getName())) {
+            System.out.println("Player with the name " + player.getName() + " already exists.");
+            return 0; // Return 0 to indicate that the sign-up failed
+        }
 
-      //  String sqlinsert = "INSERT INTO ROOT.\"players\"(ROOT.\"players\".\"ip\",ROOT.\"players\".\"name\",ROOT.\"players\".\"password\",ROOT.\"players\".\"score\")VALUES (?,?,?,?)";
-        String sqlinsert="INSERT INTO ROOT.PLAYERS (NAME,PASSWORD,STATUS,SCORE) VALUES (?,?,?,?)";
+        String sqlinsert = "INSERT INTO ROOT.PLAYERS (NAME, PASSWORD, STATUS, SCORE) VALUES (?, ?, ?, ?)";
         PreparedStatement pst = connection.prepareStatement(sqlinsert);
-//        pst.setString(1, player.getIp());
         pst.setString(1, player.getName());
         pst.setString(2, player.getPassword());
-        
         pst.setString(3, "offline");
         pst.setString(4, String.valueOf(player.getScore()));
 
         int rs = pst.executeUpdate();
-        if (rs == 0) {
-            System.out.println("insert faild");
+        if (rs <= 0) {
+            System.out.println("Insert failed");
         } else {
-            System.out.println("insert succeded");
+            System.out.println("Insert succeeded");
         }
         return rs;
+    } catch (SQLException ex) {
+        // Handle SQLException (print or log the exception, and consider proper error handling)
+        ex.printStackTrace();
     }
+    return 0;
+}
+
+// Helper method to check if a player with the given name already exists
+private boolean playerExists(String playerName) throws SQLException {
+    String query = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
+    try (PreparedStatement pst = connection.prepareStatement(query)) {
+        pst.setString(1, playerName);
+        try (ResultSet resultSet = pst.executeQuery()) {
+            if (resultSet.next()) {
+                    return true;
+            }
+        }
+    }
+    return false;
+}
  
-       public int signIn(DTOPlayer player) throws SQLException {
+       public int signIn(DTOPlayer player) {
         String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ? AND PASSWORD = ?";
 
         try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
