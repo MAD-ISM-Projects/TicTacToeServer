@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -64,8 +65,10 @@ public class Server extends Thread {
         clientsMap.put(playerName, handler);
     }
 
-    void removeClient(String playerName) {
-        clientsMap.remove(playerName);
+   void removeClient(String playerName) {
+         if (playerName != null) {
+             clientsMap.remove(playerName);
+         }
     }
 
     void sendResponseToClient(String playerName, String result) {
@@ -83,6 +86,7 @@ class TicTacToeHandler extends Thread {
     private Socket clientSocket;
     private Server server;
     private DTOPlayer player; // Declare the player variable here
+    String clientRequest;
 
     public TicTacToeHandler(Socket clientSocket, Server server) {
         this.clientSocket = clientSocket;
@@ -98,7 +102,7 @@ class TicTacToeHandler extends Thread {
             String clientRequestBody = dis.readLine();
             DBHandler dbHandler = new DBHandler();
             JsonObject jsonObject = new Gson().fromJson(clientRequestBody, JsonObject.class);
-            String clientRequest = jsonObject.get("request").getAsString();
+            clientRequest = jsonObject.get("request").getAsString();
 
             int result;
 
@@ -120,11 +124,21 @@ class TicTacToeHandler extends Thread {
                     break;
             }
 
+        } catch (SocketException e) {
+            // Handle socket closed gracefully
+           // Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
         } catch (IOException ex) {
-            Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "IO error", ex);
         } finally {
             // Clean up resources and remove client from the server's map
-            server.removeClient(player.getName());
+            //if(clientRequest!="SignUp")server.removeClient(player.getName());
+            try {
+                if (dis != null) dis.close();
+                if (ps != null) ps.close();
+                if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Error closing resources", ex);
+            }
         }
     }
 
@@ -132,4 +146,5 @@ class TicTacToeHandler extends Thread {
         ps.println(msg);
     }
 }
+
 
