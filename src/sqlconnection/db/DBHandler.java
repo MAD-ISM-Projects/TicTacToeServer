@@ -120,4 +120,29 @@ private boolean playerExists(String playerName) throws SQLException {
         }
     }   
     
+     
+      public ArrayList<DTOPlayer> getOnlinePlayers() throws SQLException {
+        ArrayList<DTOPlayer> onlinePlayers = new ArrayList<>();
+        String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE STATUS = 'online'";
+
+        try (PreparedStatement selectOnline = connection.prepareStatement(sqlSelect);
+             ResultSet rs = selectOnline.executeQuery()) {
+
+            while (rs.next()) {
+                // Retrieve values from the result set and create a DTOPlayer object
+                String name = rs.getString("NAME");
+                String password = rs.getString("PASSWORD");
+                int score = rs.getInt("SCORE");
+                String status = rs.getString("STATUS");
+
+                System.out.println(status);
+                DTOPlayer player = new DTOPlayer(name, password, score, status);
+                onlinePlayers.add(player);
+            }
+        }
+
+        return onlinePlayers;
+    }
 }
+
+
