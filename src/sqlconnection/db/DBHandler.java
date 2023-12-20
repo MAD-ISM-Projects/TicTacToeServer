@@ -120,7 +120,26 @@ private boolean playerExists(String playerName) throws SQLException {
         }
     }   
     
-     
+     /*public ArrayList<UserOnline> getOnlinePlayers() throws SQLException {
+
+        ArrayList<UserOnline> onlinePlayers = new ArrayList<>();
+
+        String sql = " SELECT * FROM  ROOT.\"game\" Where ROOT.\"game\".\"status\"='online' ";
+        PreparedStatement pst = connection.prepareStatement(sql);
+
+        ResultSet resultSet = pst.executeQuery();
+        Gson gson = new GsonBuilder().create();
+        while (resultSet.next()) {
+            onlinePlayers.add(new UserOnline(
+                    resultSet.getString("ip"),
+                    resultSet.getString("username"),
+                    resultSet.getString("password"),
+                    resultSet.getString("status"),
+                    resultSet.getInt("score")
+            ));
+        }
+        return onlinePlayers;
+    }*/
       public ArrayList<DTOPlayer> getOnlinePlayers() throws SQLException {
         ArrayList<DTOPlayer> onlinePlayers = new ArrayList<>();
         String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE STATUS = 'online'";
@@ -140,7 +159,6 @@ private boolean playerExists(String playerName) throws SQLException {
                 onlinePlayers.add(player);
             }
         }
-
         return onlinePlayers;
     }
 }

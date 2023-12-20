@@ -122,6 +122,7 @@ class TicTacToeHandler extends Thread {
                     server.registerClient(player.getName(), this);
                     server.sendResponseToClient(player.getName(),  String.valueOf(result));
                     break;
+                case "":
             }
 
         } catch (SocketException e) {
