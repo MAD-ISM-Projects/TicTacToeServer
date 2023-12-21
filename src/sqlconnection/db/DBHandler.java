@@ -2,6 +2,8 @@
 
 package sqlconnection.db;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import dto.DTOPlayer;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -160,6 +162,34 @@ private boolean playerExists(String playerName) throws SQLException {
             }
         }
         return onlinePlayers;
+    }
+      public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
+        try {
+            String sql = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
+            PreparedStatement pst = connection.prepareStatement(sql);
+            pst.setString(1, "busy");
+            pst.setString(2, player1.getName());
+            pst.setString(3, player2.getName());
+            int rs = pst.executeUpdate();
+            System.out.println(" rs = "+rs);
+            return rs!=0;
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }finally{
+            return false;
+        }  
+      }
+      public int getPlayerScore(String userName) throws SQLException{
+            String sql = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
+            PreparedStatement pst= connection.prepareCall(sql);
+            pst.setString(1,userName);
+            ResultSet rs = pst.executeQuery();
+            Gson gson=new GsonBuilder().create();
+            if(rs.next()){
+                return rs.getInt("score");
+            }else{
+                return 0;
+            }
     }
 }
 
