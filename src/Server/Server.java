@@ -7,6 +7,7 @@ import dto.Authentication;
 import dto.ClientRequest;
 import dto.DTOPlayer;
 import dto.GameStatus;
+import dto.Invitation;
 import sqlconnection.db.DBHandler;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -140,6 +141,11 @@ class TicTacToeHandler extends Thread {
                     String json = gson.toJson(availablePlayersList);
                     server.registerClient(player.getName(), this);
                     server.sendResponseToClient(player.getName(),json);
+                case "gameInvitation":
+                    Invitation inv = new Gson().fromJson(clientRequest.data,Invitation.class);
+                    server.sendResponseToClient(inv.getOpponentName(),inv.getPlayerName());
+                    System.out.println("Tech  "+inv);
+                    
             }
 
         } catch (SocketException e) {
@@ -149,7 +155,7 @@ class TicTacToeHandler extends Thread {
             Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "IO error", ex);
         } finally {
             // Clean up resources and remove client from the server's map
-            if(clientRequest=="SignUp")server.removeClient(player.getName());
+           // if(clientRequest=="SignUp")server.removeClient(player.getName());
             try {
                 if (dis != null) dis.close();
                 if (ps != null) ps.close();

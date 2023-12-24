@@ -40,6 +40,12 @@ public class ClientRequest extends GsonHandler{
         
     }
     
+    public ClientRequest(String playerName,String opponentName,ClientRequestHeader request) {
+        this.request = request.toString();
+        Invitation inv = new Invitation(playerName,opponentName);
+        data= inv.toJson();
+    }
+    
         public ClientRequest(ClientRequestHeader request,String name) {
         this.request = request.toString();
          GameStatus status=new GameStatus(name);
