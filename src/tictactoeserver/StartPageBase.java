@@ -17,6 +17,7 @@ import javafx.geometry.Pos;
 import javafx.scene.chart.PieChart;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
+import sqlconnection.db.DBHandler;
 
 
 public class StartPageBase extends AnchorPane {

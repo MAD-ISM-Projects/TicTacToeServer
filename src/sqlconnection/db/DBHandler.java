@@ -141,13 +141,17 @@ private boolean playerExists(String playerName) throws SQLException {
             ));
         }
         return onlinePlayers;
-    }*/
-      public ArrayList<DTOPlayer> getOnlinePlayers() throws SQLException {
+    }
+     
+  
+     */
+     public ArrayList<DTOPlayer> getOnlinePlayers(String playerName) {
         ArrayList<DTOPlayer> onlinePlayers = new ArrayList<>();
-        String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE STATUS = 'online'";
+        String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE STATUS = 'online' AND NAME <> ?";
 
-        try (PreparedStatement selectOnline = connection.prepareStatement(sqlSelect);
-             ResultSet rs = selectOnline.executeQuery()) {
+        try (PreparedStatement selectOnline = connection.prepareStatement(sqlSelect)) {
+             selectOnline.setString(1, playerName);
+             ResultSet rs = selectOnline.executeQuery();
 
             while (rs.next()) {
                 // Retrieve values from the result set and create a DTOPlayer object
@@ -155,15 +159,17 @@ private boolean playerExists(String playerName) throws SQLException {
                 String password = rs.getString("PASSWORD");
                 int score = rs.getInt("SCORE");
                 String status = rs.getString("STATUS");
-
                 System.out.println(status);
                 DTOPlayer player = new DTOPlayer(name, password, score, status);
                 onlinePlayers.add(player);
             }
+        } catch (SQLException ex) {
+            return new ArrayList<DTOPlayer>();
         }
         return onlinePlayers;
     }
-      public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
+     
+     public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
         try {
             String sql = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
             PreparedStatement pst = connection.prepareStatement(sql);
@@ -179,6 +185,7 @@ private boolean playerExists(String playerName) throws SQLException {
             return false;
         }  
       }
+     
       public int getPlayerScore(String userName) throws SQLException{
             String sql = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
             PreparedStatement pst= connection.prepareCall(sql);
