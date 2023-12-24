@@ -14,18 +14,21 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tictactoeserver.StartPageBase;
 
 public class Server extends Thread {
 
     private ServerSocket serverSocket;
     private volatile boolean running = true;
     private ConcurrentHashMap<String, TicTacToeHandler> clientsMap = new ConcurrentHashMap<>();
-
+    private StartPageBase startPageBase;
     public Server() {
         try {
             serverSocket = new ServerSocket(5005);
@@ -35,7 +38,7 @@ public class Server extends Thread {
             stopServer();
         }
     }
-
+     
     public void stopServer() {
         running = false;
         try {
@@ -64,7 +67,9 @@ public class Server extends Thread {
     }
 
 
-
+    public void setStartPageBase(StartPageBase startPageBase) {
+        this.startPageBase = startPageBase;
+    }
     void registerClient(String playerName, TicTacToeHandler handler) {
         clientsMap.put(playerName, handler);
     }
@@ -78,11 +83,42 @@ public class Server extends Thread {
     void sendResponseToClient(String playerName, String result) {
         TicTacToeHandler handler = clientsMap.get(playerName);
         if (handler != null) {
+            updatePieChart();
             handler.sendMessage(result);
         }
     }
+   
+   private int getCurrentTime() {
+    // Implement logic to get the current time
+    return 0; // Placeholder, replace with actual implementation
 }
 
+    public void updatePieChart() {
+        int onlineCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("online")).count();
+        int offlineCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("offline")).count();
+        int busyCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("busy")).count();
+
+        if (startPageBase != null) {
+            //startPageBase.updateLineChart(onlineCount, offlineCount, busyCount);
+
+            // Assuming you have some mechanism to track time, pass the time and online count to update the line chart
+            int currentTime = getCurrentTime(); // Implement this method to get the current time
+          //  startPageBase.updateLineChart(currentTime, onlineCount);
+        }
+    }
+    private void updateAllClientsStatusOffline() {
+        for (Map.Entry<String, TicTacToeHandler> entry : clientsMap.entrySet()) {
+            String playerName = entry.getKey();
+            try {
+                DBHandler dbHandler = new DBHandler();
+                dbHandler.updateStatus(playerName, "offline");
+            } catch (SQLException e) {
+                // Handle SQLException appropriately (print or log the exception)
+                e.printStackTrace();
+            }
+        }
+    }
+}
 class TicTacToeHandler extends Thread {
 
     private DataInputStream dis;
@@ -91,7 +127,7 @@ class TicTacToeHandler extends Thread {
     private Server server;
     private DTOPlayer player; // Declare the player variable here
     String clientRequest;
-
+    private String playerStatus;
     public TicTacToeHandler(Socket clientSocket, Server server) {
         this.clientSocket = clientSocket;
         this.server = server;
@@ -160,9 +196,15 @@ class TicTacToeHandler extends Thread {
             }
         }
     }
-
+   public void updatePlayerStatus(String status) {
+        playerStatus = status;
+        server.updatePieChart(); // Notify the server to update the chart
+    }
     void sendMessage(String msg) {
         ps.println(msg);
+    }
+    public String getPlayerStatus() {
+        return playerStatus;
     }
 }
 

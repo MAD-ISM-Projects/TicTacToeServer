@@ -113,7 +113,7 @@ private boolean playerExists(String playerName) throws SQLException {
         }
     }
 
-     private void updateStatus(String playerName, String status) throws SQLException {
+    public void updateStatus(String playerName, String status) throws SQLException {
         String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
         try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
             updateStatement.setString(1, status);
@@ -121,7 +121,12 @@ private boolean playerExists(String playerName) throws SQLException {
             updateStatement.executeUpdate();
         }
     }   
-    
+    public void updateAllPlayersStatusOffline() throws SQLException {
+        String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = 'offline'";
+        try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            updateStatement.executeUpdate();
+        }
+    }
      /*public ArrayList<UserOnline> getOnlinePlayers() throws SQLException {
 
         ArrayList<UserOnline> onlinePlayers = new ArrayList<>();
@@ -168,8 +173,52 @@ private boolean playerExists(String playerName) throws SQLException {
         }
         return onlinePlayers;
     }
-}
-     
+          public int getPlayerScore(String userName) throws SQLException{
+            String sql = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
+            PreparedStatement pst= connection.prepareCall(sql);
+            pst.setString(1,userName);
+            ResultSet rs = pst.executeQuery();
+            Gson gson=new GsonBuilder().create();
+            if(rs.next()){
+                return rs.getInt("score");
+            }else{
+                return 0;
+            }
+    }
+
+           public synchronized int getOnlineRate() throws SQLException {
+            String sql = "SELECT COUNT(NAME) AS total FROM ROOT.PLAYERS WHERE STATUS = ?";
+             PreparedStatement pst = connection.prepareStatement(sql);
+             pst.setString(1, "online");
+             int count = 0;
+             ResultSet rs = pst.executeQuery();
+             while (rs.next()) {
+                 count = rs.getInt("total");
+             }
+             return count;     
+       }
+        public synchronized int getbusyeRate() throws SQLException {
+            String sql = "select COUNT(NAME) AS total FROM  ROOT.PLAYERS WHERE STATUS = ?";
+             PreparedStatement pst = connection.prepareStatement(sql);
+             pst.setString(1, "busy");
+             int count = 0;
+             ResultSet rs = pst.executeQuery();
+             while (rs.next()) {
+                 count = rs.getInt("total");
+             }
+             return count;     
+       }
+        public synchronized int getOfflineRate() throws SQLException {
+            String sql = "select COUNT(NAME) AS total FROM  ROOT.PLAYERS WHERE STATUS = ?";
+             PreparedStatement pst = connection.prepareStatement(sql);
+             pst.setString(1, "offline");
+             int count = 0;
+             ResultSet rs = pst.executeQuery();
+             while (rs.next()) {
+                 count = rs.getInt("total");
+             }
+             return count;     
+       }   
      
      /*public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
         try {
@@ -187,8 +236,8 @@ private boolean playerExists(String playerName) throws SQLException {
             return false;
         }  
       }
-     
-      public int getPlayerScore(String userName) throws SQLException{
+     */
+    /*  public int getPlayerScore(String userName) throws SQLException{
             String sql = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
             PreparedStatement pst= connection.prepareCall(sql);
             pst.setString(1,userName);
@@ -199,7 +248,7 @@ private boolean playerExists(String playerName) throws SQLException {
             }else{
                 return 0;
             }
-    }
-}*/
+    }*/
 
+}
 
