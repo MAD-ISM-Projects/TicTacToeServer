@@ -2,7 +2,6 @@ package server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-//import static com.sun.xml.internal.ws.api.message.Packet.State.ClientRequest;
 import dto.Authentication;
 import dto.ClientRequest;
 import dto.DTOPlayer;
@@ -29,6 +28,7 @@ public class Server extends Thread {
     private volatile boolean running = true;
     private ConcurrentHashMap<String, TicTacToeHandler> clientsMap = new ConcurrentHashMap<>();
     private StartPageBase startPageBase;
+   
     public Server() {
         try {
             serverSocket = new ServerSocket(5005);
@@ -38,12 +38,13 @@ public class Server extends Thread {
             stopServer();
         }
     }
-     
+
     public void stopServer() {
         running = false;
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
+                
             }
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
@@ -67,9 +68,7 @@ public class Server extends Thread {
     }
 
 
-    public void setStartPageBase(StartPageBase startPageBase) {
-        this.startPageBase = startPageBase;
-    }
+
     void registerClient(String playerName, TicTacToeHandler handler) {
         clientsMap.put(playerName, handler);
     }
@@ -77,18 +76,17 @@ public class Server extends Thread {
    void removeClient(String playerName) {
          if (playerName != null) {
              clientsMap.remove(playerName);
+             updateAllClientsStatusOffline();
          }
     }
 
     void sendResponseToClient(String playerName, String result) {
         TicTacToeHandler handler = clientsMap.get(playerName);
         if (handler != null) {
-            updatePieChart();
             handler.sendMessage(result);
         }
     }
-   
-   private int getCurrentTime() {
+    private int getCurrentTime() {
     // Implement logic to get the current time
     return 0; // Placeholder, replace with actual implementation
 }
@@ -118,6 +116,25 @@ public class Server extends Thread {
             }
         }
     }
+    public void sendPlayerStatusUpdate(String playerName, String status) {
+        for (Map.Entry<String, TicTacToeHandler> entry : clientsMap.entrySet()) {
+            String otherPlayerName = entry.getKey();
+            if (!otherPlayerName.equals(playerName)) {
+                TicTacToeHandler handler = entry.getValue();
+                handler.sendMessage(createPlayerStatusUpdateMessage(playerName, status));
+                updateAllClientsStatusOffline();           
+            }
+        }
+    }
+
+    private String createPlayerStatusUpdateMessage(String playerName, String status) {
+        JsonObject updateObject = new JsonObject();
+        updateObject.addProperty("event", "playerStatusUpdate");
+        updateObject.addProperty("playerName", playerName);
+        updateObject.addProperty("status", status);
+        return updateObject.toString();
+    }
+
 }
 class TicTacToeHandler extends Thread {
 
@@ -128,7 +145,7 @@ class TicTacToeHandler extends Thread {
     private DTOPlayer player; // Declare the player variable here
     String clientRequest;
     private String playerStatus;
-    public TicTacToeHandler(Socket clientSocket, Server server) {
+       public TicTacToeHandler(Socket clientSocket, Server server) {
         this.clientSocket = clientSocket;
         this.server = server;
         start();
@@ -177,6 +194,11 @@ class TicTacToeHandler extends Thread {
                     String json = gson.toJson(availablePlayersList);
                     server.registerClient(player.getName(), this);
                     server.sendResponseToClient(player.getName(),json);
+                    break;
+                case "playerStatusUpdate":
+                    handlePlayerStatusUpdate(clientRequest.data);
+                    break;
+    
             }
 
         } catch (SocketException e) {
@@ -196,15 +218,32 @@ class TicTacToeHandler extends Thread {
             }
         }
     }
-   public void updatePlayerStatus(String status) {
-        playerStatus = status;
-        server.updatePieChart(); // Notify the server to update the chart
-    }
+
     void sendMessage(String msg) {
         ps.println(msg);
     }
+
+    public void updatePlayerStatus(String status) {
+        playerStatus = status;
+        server.updatePieChart();
+        server.sendPlayerStatusUpdate(player.getName(), playerStatus);
+    }
+
     public String getPlayerStatus() {
         return playerStatus;
+    }
+    private void handlePlayerStatusUpdate(String data) {
+    JsonObject updateObject = new Gson().fromJson(data, JsonObject.class);
+    String playerName = updateObject.get("playerName").getAsString();
+    String status = updateObject.get("status").getAsString();
+    server.sendResponseToClient(playerName, createPlayerStatusUpdateMessage(playerName, status));
+    }
+ private String createPlayerStatusUpdateMessage(String playerName, String status) {
+        JsonObject updateObject = new JsonObject();
+        updateObject.addProperty("event", "playerStatusUpdate");
+        updateObject.addProperty("playerName", playerName);
+        updateObject.addProperty("status", status);
+        return updateObject.toString();
     }
 }
 

@@ -186,7 +186,7 @@ private boolean playerExists(String playerName) throws SQLException {
             }
     }
 
-           public synchronized int getOnlineRate() throws SQLException {
+        public synchronized int getOnlineRate() throws SQLException {
             String sql = "SELECT COUNT(NAME) AS total FROM ROOT.PLAYERS WHERE STATUS = ?";
              PreparedStatement pst = connection.prepareStatement(sql);
              pst.setString(1, "online");

@@ -21,7 +21,7 @@ import javafx.scene.text.Text;
 import server.Server;
 import sqlconnection.db.DBHandler;
 
-public  class StartPageBase extends AnchorPane {
+public class StartPageBase extends AnchorPane {
 
     protected final Label label;
     protected final Text tictoeText;
@@ -40,7 +40,7 @@ public  class StartPageBase extends AnchorPane {
     static Server server;
     private DBHandler test;
     private ScheduledExecutorService scheduler;
-     private String playerStatus;
+    private String playerStatus;
 
     public StartPageBase() {
         scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -125,7 +125,7 @@ public  class StartPageBase extends AnchorPane {
         startStopButton.addEventHandler(ActionEvent.ACTION, (event) -> {
             if ("Start".equals(startStopButton.getText())) {
                 startStopButton.setText("Stop");
-                fetchDataAndUpdateLabels();
+
                 online.setVisible(true);
                 offline.setVisible(true);
                 busy.setVisible(true);
@@ -135,6 +135,9 @@ public  class StartPageBase extends AnchorPane {
                 new Thread(() -> {
                     try {
                         server = new Server();
+                        fetchDataAndUpdateLabels(pieChart);
+                        updateAllPlayersStatusOffline();
+
                     } catch (Exception e) {
                         e.printStackTrace(); // Handle the exception appropriately
                         Platform.runLater(() -> startStopButton.setText("Start"));
@@ -153,14 +156,13 @@ public  class StartPageBase extends AnchorPane {
                 Platform.runLater(() -> {
                     if (server != null) {
                         server.stopServer();
+                        //  updateAllPlayersStatusOffline();
+
                     }
-                    fetchDataAndUpdateLabels();
+                    fetchDataAndUpdateLabels(pieChart);
                 });
             }
         });
-
-            
-       
 
         pieChart.setLayoutX(435.0);
         pieChart.setLayoutY(62.0);
@@ -187,7 +189,7 @@ public  class StartPageBase extends AnchorPane {
         online.setText("0");
         online.setTextFill(javafx.scene.paint.Color.WHITE);
         online.setVisible(false);
-     
+
         offline.setLayoutX(551.0);
         offline.setLayoutY(360.0);
         offline.setText("0");
@@ -198,7 +200,7 @@ public  class StartPageBase extends AnchorPane {
         busy.setText("0");
         busy.setTextFill(javafx.scene.paint.Color.WHITE);
         busy.setVisible(false);
-        initPieChart();
+        initPieChart(pieChart);
         initLabels();
         getChildren().add(label);
         getChildren().add(tictoeText);
@@ -216,13 +218,16 @@ public  class StartPageBase extends AnchorPane {
         getChildren().add(busy);
 
     }
+
     private class DataUpdateRunnable implements Runnable {
+
         @Override
         public void run() {
-            fetchDataAndUpdateLabels();
+            fetchDataAndUpdateLabels(pieChart);
         }
     }
-    private void initPieChart() {
+
+    private void initPieChart(PieChart pieChart) {
         pieChart.setLayoutX(435.0);
         pieChart.setLayoutY(62.0);
         pieChart.setPrefHeight(258.0);
@@ -234,7 +239,7 @@ public  class StartPageBase extends AnchorPane {
         pieChart.getData().addAll(
                 new PieChart.Data("Online", onlineValue),
                 new PieChart.Data("Offline", offlineValue),
-                new PieChart.Data("Busy",busyValue )
+                new PieChart.Data("Busy", busyValue)
         );
         traverseSceneGraph(pieChart, Color.WHITE);
         setCustomColors();
@@ -280,7 +285,7 @@ public  class StartPageBase extends AnchorPane {
         setCustomColors();
     }
 
-  private void fetchDataAndUpdateLabels() {
+    private void fetchDataAndUpdateLabels(PieChart pieChart) {
         if ("Stop".equals(startStopButton.getText())) {
             try {
                 // Fetch online, offline, busy values from the database
@@ -295,6 +300,7 @@ public  class StartPageBase extends AnchorPane {
                     busy.setText(String.valueOf(busyValue));
 
                     updatePieChart(onlineValue, offlineValue, busyValue);
+                    updateAllPlayersStatusOffline();
                 });
 
                 // ... rest of your code ...
@@ -305,7 +311,7 @@ public  class StartPageBase extends AnchorPane {
     }
 
     private void setCustomColors() {
-      
+
         // Get the data slices
         PieChart.Data[] dataSlices = new PieChart.Data[pieChart.getData().size()];
         pieChart.getData().toArray(dataSlices);
@@ -321,31 +327,41 @@ public  class StartPageBase extends AnchorPane {
                 style = "-fx-pie-color: #FF8FDA;"; // Offline color
             }
             dataSlice.getNode().setStyle(style);
-           // System.out.println("Style applied for " + dataSlice.getName() + ": " + style);
+            // System.out.println("Style applied for " + dataSlice.getName() + ": " + style);
         }
     }
 
-    
     private void traverseSceneGraph(PieChart chart, Color color) {
-    for (Node node : chart.lookupAll(".text.chart-pie-label")) {
-        if (node instanceof Text) {
-            ((Text) node).setFill(color);
+        for (Node node : chart.lookupAll(".text.chart-pie-label")) {
+            if (node instanceof Text) {
+                ((Text) node).setFill(color);
+            }
         }
     }
-    }
+
     @Override
     public void finalize() throws Throwable {
         // Shutdown the scheduler when the object is finalized
         scheduler.shutdown();
         super.finalize();
-    } 
-     public void updatePlayerStatus(String status) {
+    }
+
+    public void updatePlayerStatus(String status) {
         playerStatus = status;
         server.updatePieChart(); // Notify the server to update the chart
     }
+
     public String getPlayerStatus() {
         return playerStatus;
     }
 
- }
-
+    private void updateAllPlayersStatusOffline() {
+        try {
+            DBHandler dbHandler = new DBHandler();
+            dbHandler.updateAllPlayersStatusOffline();
+        } catch (SQLException e) {
+            // Handle SQLException appropriately (print or log the exception)
+            e.printStackTrace();
+        }
+    }
+}
