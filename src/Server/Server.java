@@ -135,7 +135,8 @@ class TicTacToeHandler extends Thread {
                 case "onlineUsers":
                     GameStatus gameStatus = new Gson().fromJson(clientRequest.data, GameStatus.class);
                     player.setName(gameStatus.userName);
-                    ArrayList<DTOPlayer> availablePlayersList = dbHandler.getOnlinePlayers(player.getName());
+                    ArrayList<DTOPlayer> availablePlayersList = dbHandler.getOnlinePlayers();
+                    System.out.println(availablePlayersList);
                     Gson gson = new Gson();
                     String json = gson.toJson(availablePlayersList);
                     server.registerClient(player.getName(), this);
