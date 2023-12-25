@@ -15,4 +15,7 @@ public enum ClientRequestHeader{
     signOut,
     onlineUsers,
     gameInvitation,
+    requestInvitation,
+    responseInvitation,
+    nextStep
 }
