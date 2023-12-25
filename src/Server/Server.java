@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 //import static com.sun.xml.internal.ws.api.message.Packet.State.ClientRequest;
 import dto.Authentication;
 import dto.ClientRequest;
+import dto.ClientRequestHeader;
 import dto.DTOPlayer;
 import dto.GameStatus;
 import dto.Invitation;
@@ -66,18 +67,19 @@ public class Server extends Thread {
 
 
 
-    void registerClient(String playerName, TicTacToeHandler handler) {
+    synchronized void registerClient(String playerName, TicTacToeHandler handler) {
         clientsMap.put(playerName, handler);
     }
 
-   void removeClient(String playerName) {
+   synchronized void removeClient(String playerName) {
          if (playerName != null) {
              clientsMap.remove(playerName);
          }
     }
 
-    void sendResponseToClient(String playerName, String result) {
+    synchronized void sendResponseToClient(String playerName, String result) {
         TicTacToeHandler handler = clientsMap.get(playerName);
+        System.out.println("handler " + handler.toString() + " for " + playerName);
         if (handler != null) {
             handler.sendMessage(result);
         }
@@ -99,6 +101,7 @@ class TicTacToeHandler extends Thread {
         start();
     }
 
+    @Override
     public void run() {
         player = new DTOPlayer(); // Initialize the player object here
         try {
@@ -106,6 +109,7 @@ class TicTacToeHandler extends Thread {
             this.ps = new PrintStream(clientSocket.getOutputStream());
             String clientRequestBody = dis.readLine();
             DBHandler dbHandler = new DBHandler();
+            System.out.println(clientRequestBody + " ++++++++++++++++++++++++++");
             ClientRequest clientRequest = new Gson().fromJson(clientRequestBody, ClientRequest.class);
 
 //            JsonObject jsonObject = new Gson().fromJson(clientRequestBody, JsonObject.class);
@@ -122,7 +126,7 @@ class TicTacToeHandler extends Thread {
                     player.setScore(0);
                     result = dbHandler.signUp(player);
                     server.registerClient(player.getName(), this);
-                    server.sendResponseToClient(player.getName(), String.valueOf(result));
+                    ps.println(String.valueOf(result));
                     break;
                 
               case "signIn":
@@ -131,7 +135,7 @@ class TicTacToeHandler extends Thread {
                     player.setPassword(signIn.password);
                     result = dbHandler.signIn(player);
                     server.registerClient(player.getName(), this);
-                    server.sendResponseToClient(player.getName(),  String.valueOf(result));
+                    sendMessage(String.valueOf(result));
                     break;
                 case "onlineUsers":
                     GameStatus gameStatus = new Gson().fromJson(clientRequest.data, GameStatus.class);
@@ -140,12 +144,20 @@ class TicTacToeHandler extends Thread {
                     Gson gson = new Gson();
                     String json = gson.toJson(availablePlayersList);
                     server.registerClient(player.getName(), this);
-                    server.sendResponseToClient(player.getName(),json);
+                    sendMessage(json);
+                    break;
                 case "gameInvitation":
                     Invitation inv = new Gson().fromJson(clientRequest.data,Invitation.class);
-                    server.sendResponseToClient(inv.getOpponentName(),inv.getPlayerName());
+                    ClientRequest requestInvitation= new ClientRequest(inv.getPlayerName(), inv.getOpponentName(), ClientRequestHeader.requestInvitation);
+                    server.sendResponseToClient(inv.getOpponentName(), requestInvitation.toJson());
                     System.out.println("Tech  "+inv);
-                    
+                    break;
+                case "requestInvitation":
+                    Invitation invi = new Gson().fromJson(clientRequest.data,Invitation.class);
+                    server.sendResponseToClient(invi.getPlayerName(),invi.getOpponentName());
+                    break;
+                case "responseInvitation":
+                    break;
             }
 
         } catch (SocketException e) {
