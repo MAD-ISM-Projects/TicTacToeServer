@@ -163,6 +163,7 @@ public class StartPageBase extends AnchorPane {
                         server.stopServer();
                     }
                     fetchDataAndUpdateLabels(pieChart);
+                    updateAllPlayersStatusOffline();
                 });
             }
         });
@@ -221,15 +222,6 @@ public class StartPageBase extends AnchorPane {
         getChildren().add(busy);
 
     }
-
-    private class DataUpdateRunnable implements Runnable {
-
-        @Override
-        public void run() {
-            fetchDataAndUpdateLabels(pieChart);
-        }
-    }
-
     private void initPieChart(PieChart pieChart) {
         pieChart.setLayoutX(435.0);
         pieChart.setLayoutY(62.0);
@@ -296,7 +288,7 @@ public class StartPageBase extends AnchorPane {
                     busy.setText(String.valueOf(busyValue));
 
                     updatePieChart(onlineValue, offlineValue, busyValue);
-                    updateAllPlayersStatusOffline();
+                   
                 });
 
             } catch (SQLException ex) {
