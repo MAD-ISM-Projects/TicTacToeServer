@@ -1,5 +1,6 @@
 package tictactoeserver;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,6 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import server.Server;
 import sqlconnection.db.DBHandler;
 
@@ -41,11 +43,10 @@ public class StartPageBase extends AnchorPane {
     private DBHandler test;
     private ScheduledExecutorService scheduler;
     private String playerStatus;
+    private Thread dataUpdateThread;
 
-    public StartPageBase() {
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(new DataUpdateRunnable(), 0, 100, TimeUnit.MILLISECONDS);
-        test = new DBHandler();
+    public StartPageBase(Stage stage) throws IOException, SQLException {
+         test = new DBHandler();
         label = new Label();
         tictoeText = new Text();
         miniText = new Text();
@@ -121,7 +122,6 @@ public class StartPageBase extends AnchorPane {
         startStopButton.setText("Start");
         startStopButton.setTextFill(javafx.scene.paint.Color.valueOf("#aea5b8"));
         startStopButton.setFont(new Font(24.0));
-
         startStopButton.addEventHandler(ActionEvent.ACTION, (event) -> {
             if ("Start".equals(startStopButton.getText())) {
                 startStopButton.setText("Stop");
@@ -131,18 +131,19 @@ public class StartPageBase extends AnchorPane {
                 busy.setVisible(true);
                 pieChart.setVisible(true);
 
-                // Run server creation on a separate thread
-                new Thread(() -> {
+                dataUpdateThread = new Thread(() -> {
                     try {
                         server = new Server();
-                        fetchDataAndUpdateLabels(pieChart);
-                        updateAllPlayersStatusOffline();
-
+                        while ("Stop".equals(startStopButton.getText())) {
+                            fetchDataAndUpdateLabels(pieChart);
+                            TimeUnit.SECONDS.sleep(5); // Sleep for 5 seconds before the next update
+                        }
                     } catch (Exception e) {
                         e.printStackTrace(); // Handle the exception appropriately
                         Platform.runLater(() -> startStopButton.setText("Start"));
                     }
-                }).start();
+                });
+                dataUpdateThread.start();
             } else {
                 startStopButton.setText("Start");
                 pieChart.setVisible(false);
@@ -152,12 +153,14 @@ public class StartPageBase extends AnchorPane {
                 online.setVisible(false);
                 offline.setVisible(false);
                 busy.setVisible(false);
-                // Run server stopping on the JavaFX Application Thread
+
+                if (dataUpdateThread != null && dataUpdateThread.isAlive()) {
+                    dataUpdateThread.interrupt();
+                }
+
                 Platform.runLater(() -> {
                     if (server != null) {
                         server.stopServer();
-                        //  updateAllPlayersStatusOffline();
-
                     }
                     fetchDataAndUpdateLabels(pieChart);
                 });
@@ -277,14 +280,7 @@ public class StartPageBase extends AnchorPane {
         busy.setTextFill(javafx.scene.paint.Color.WHITE);
     }
 
-    private void updatePieChart(int onlineValue, int offlineValue, int busyValue) {
-        ObservableList<PieChart.Data> pieChartData = pieChart.getData();
-        pieChartData.get(0).setPieValue(onlineValue);
-        pieChartData.get(1).setPieValue(offlineValue);
-        pieChartData.get(2).setPieValue(busyValue);
-        setCustomColors();
-    }
-
+   
     private void fetchDataAndUpdateLabels(PieChart pieChart) {
         if ("Stop".equals(startStopButton.getText())) {
             try {
@@ -303,13 +299,19 @@ public class StartPageBase extends AnchorPane {
                     updateAllPlayersStatusOffline();
                 });
 
-                // ... rest of your code ...
             } catch (SQLException ex) {
                 Logger.getLogger(StartPageBase.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
+    private void updatePieChart(int onlineValue, int offlineValue, int busyValue) {
+        ObservableList<PieChart.Data> pieChartData = pieChart.getData();
+        pieChartData.get(0).setPieValue(onlineValue);
+        pieChartData.get(1).setPieValue(offlineValue);
+        pieChartData.get(2).setPieValue(busyValue);
+        setCustomColors();
+    }
     private void setCustomColors() {
 
         // Get the data slices

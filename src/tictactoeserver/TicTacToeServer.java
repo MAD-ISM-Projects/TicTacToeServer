@@ -20,7 +20,7 @@ public class TicTacToeServer extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root =new StartPageBase();
+        Parent root =new StartPageBase(stage);
         stage.setOnCloseRequest((event) -> {
             if(StartPageBase.server!=null)
                  StartPageBase.server.stopServer();
