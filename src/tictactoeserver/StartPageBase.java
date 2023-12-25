@@ -2,7 +2,6 @@ package tictactoeserver;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -41,12 +40,10 @@ public class StartPageBase extends AnchorPane {
     protected final Label busy;
     static Server server;
     private DBHandler test;
-    private ScheduledExecutorService scheduler;
-    private String playerStatus;
     private Thread dataUpdateThread;
 
     public StartPageBase(Stage stage) throws IOException, SQLException {
-         test = new DBHandler();
+        test = new DBHandler();
         label = new Label();
         tictoeText = new Text();
         miniText = new Text();
@@ -136,8 +133,11 @@ public class StartPageBase extends AnchorPane {
                         server = new Server();
                         while ("Stop".equals(startStopButton.getText())) {
                             fetchDataAndUpdateLabels(pieChart);
-                            TimeUnit.SECONDS.sleep(5); // Sleep for 5 seconds before the next update
+                            TimeUnit.MICROSECONDS.sleep(500);
                         }
+                    } catch (InterruptedException e) {
+                        // Handle interruption
+                        System.out.println("Exiting loop");
                     } catch (Exception e) {
                         e.printStackTrace(); // Handle the exception appropriately
                         Platform.runLater(() -> startStopButton.setText("Start"));
@@ -222,6 +222,7 @@ public class StartPageBase extends AnchorPane {
         getChildren().add(busy);
 
     }
+
     private void initPieChart(PieChart pieChart) {
         pieChart.setLayoutX(435.0);
         pieChart.setLayoutY(62.0);
@@ -272,7 +273,6 @@ public class StartPageBase extends AnchorPane {
         busy.setTextFill(javafx.scene.paint.Color.WHITE);
     }
 
-   
     private void fetchDataAndUpdateLabels(PieChart pieChart) {
         if ("Stop".equals(startStopButton.getText())) {
             try {
@@ -288,7 +288,7 @@ public class StartPageBase extends AnchorPane {
                     busy.setText(String.valueOf(busyValue));
 
                     updatePieChart(onlineValue, offlineValue, busyValue);
-                   
+
                 });
 
             } catch (SQLException ex) {
@@ -304,6 +304,7 @@ public class StartPageBase extends AnchorPane {
         pieChartData.get(2).setPieValue(busyValue);
         setCustomColors();
     }
+
     private void setCustomColors() {
 
         // Get the data slices
@@ -331,22 +332,6 @@ public class StartPageBase extends AnchorPane {
                 ((Text) node).setFill(color);
             }
         }
-    }
-
-    @Override
-    public void finalize() throws Throwable {
-        // Shutdown the scheduler when the object is finalized
-        scheduler.shutdown();
-        super.finalize();
-    }
-
-    public void updatePlayerStatus(String status) {
-        playerStatus = status;
-        server.updatePieChart(); // Notify the server to update the chart
-    }
-
-    public String getPlayerStatus() {
-        return playerStatus;
     }
 
     private void updateAllPlayersStatusOffline() {
