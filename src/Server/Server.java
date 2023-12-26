@@ -78,8 +78,9 @@ public class Server extends Thread {
 
     synchronized void sendResponseToClient(String playerName, String result) {
         TicTacToeHandler handler = clientsMap.get(playerName);
-        System.out.println("handler " + handler.toString() + " for " + playerName);
         if (handler != null) {
+            
+        System.out.println("handler " + handler.toString() + " for " + playerName);
             handler.sendMessage(result);
         }
     }
