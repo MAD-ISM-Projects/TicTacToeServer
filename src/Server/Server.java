@@ -158,22 +158,16 @@ class TicTacToeHandler extends Thread {
                         break;
                     case "gameInvitation":
                         Invitation inv = new Gson().fromJson(clientRequest.data, Invitation.class);
-                        
-                        server.sendResponseToClient(inv.getOpponentName(), inv.toJson());
-                        break;
-
-                    case "requestInvitation":
-                        Invitation invi = new Gson().fromJson(clientRequest.data, Invitation.class);
-                        System.out.println("ReqInvitation================1");
+                        server.sendResponseToClient(inv.getOpponentName(), clientRequestBody);
                         break;
                     case "responseInvitation":
-                        Invitation responseInvitation = new Gson().fromJson(clientRequest.data, Invitation.class);
-                        // Process the response, e.g., update game state, notify the original sender
-                        System.out.println("Response to invitation from " + responseInvitation.getOpponentName() + ": " + responseInvitation.getPlayerName());
+                        Invitation res = new Gson().fromJson(clientRequest.data, Invitation.class);
+                        server.sendResponseToClient(res.getPlayerName(), clientRequestBody);
+                        System.out.println("ReqInvitation================1");
                         break;
                 }
             }
-
+            
         } catch (SocketException e) {
             // Handle socket closed gracefully
             // Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
