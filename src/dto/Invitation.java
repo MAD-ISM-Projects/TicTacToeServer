@@ -12,11 +12,22 @@ package dto;
 public class Invitation extends GsonHandler{
     String playerName;
     String opponentName;
+    String response;
 
-    public Invitation(String playerName, String opponentName) {
+    public String getResponse() {
+        return response;
+    }
+
+    public void setResponse(String response) {
+        this.response = response;
+    }
+
+    public Invitation(String playerName, String opponentName, invitationResponseStatus response) {
         this.playerName = playerName;
         this.opponentName = opponentName;
+        this.response = response.toString();
     }
+
 
     public String getPlayerName() {
         return playerName;
