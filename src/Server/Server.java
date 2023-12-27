@@ -133,6 +133,15 @@ class TicTacToeHandler extends Thread {
                         server.registerClient(player.getName(), this);
                         //ps.println(String.valueOf(result));
                         server.sendResponseToClient(player.getName(), String.valueOf(result));
+                        break;
+                    case "signIn":
+                        Authentication signIn = new Gson().fromJson(clientRequest.data, Authentication.class);
+                        player.setName(signIn.userName);
+                        player.setPassword(signIn.password);
+                        result = dbHandler.signIn(player);
+                        server.registerClient(player.getName(), this);
+                        server.sendResponseToClient(player.getName(), String.valueOf(result));
+                        break;
                     case "onlineUsers":
                         System.out.println("done");
                         GameStatus gameStatus = new Gson().fromJson(clientRequest.data, GameStatus.class);
@@ -148,33 +157,31 @@ class TicTacToeHandler extends Thread {
                     case "gameInvitation":
                         Invitation inv = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(inv.getOpponentName(), clientRequest.toJson());
-                        System.out.println("game invi p1 from server  "+inv.getPlayerName()+" p2 from server "+inv.getOpponentName());
+                        System.out.println("game invi p1 from server  " + inv.getPlayerName() + " p2 from server " + inv.getOpponentName());
                         break;
                     case "responseInvitation":
                         Invitation res = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(res.getPlayerName(), clientRequest.toJson());
-                        System.out.println("response p1 from server  "+res.getPlayerName()+" p2 from server "+res.getOpponentName());
+                        System.out.println("response p1 from server  " + res.getPlayerName() + " p2 from server " + res.getOpponentName());
                         System.out.println("ReqInvitation================1");
                         break;
                     case "refusedInvitation":
                         Invitation ref = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(ref.getPlayerName(), clientRequest.toJson());
                         break;
-                                     case "signOut":
-                    Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
-                    player.setName(playerStatus.username);
-                  //  player.setStatus("offline"); // Set the player's status to "offline"
-                    result = dbHandler.signOut(player);
-                    server.removeClient(player.getName());
+                    case "signOut":
+                        Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
+                        player.setName(playerStatus.username);
+                        //  player.setStatus("offline"); // Set the player's status to "offline"
+                        result = dbHandler.signOut(player);
+                        server.removeClient(player.getName());
 
-                    // Notify other clients about the player's status update
-                  //  server.sendPlayerStatusUpdate(player.getName(), "offline");
+                        // Notify other clients about the player's status update
+                        //  server.sendPlayerStatusUpdate(player.getName(), "offline");
+                        // Send a response to the client indicating the sign-out result
+                        server.sendResponseToClient(player.getName(), String.valueOf(result));
+                        break;
 
-                    // Send a response to the client indicating the sign-out result
-                    server.sendResponseToClient(player.getName(), String.valueOf(result));
-                    break;
-
-   
                 }
             }
 
