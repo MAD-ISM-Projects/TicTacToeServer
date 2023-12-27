@@ -232,11 +232,11 @@ private boolean playerExists(String playerName) throws SQLException {
          String sqlSelect = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
 
         try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
-            pst.setString(1, player.getName());
-            pst.setString(2, "offline");
+            pst.setString(2, player.getName());
+            pst.setString(1, "offline");
             
-            ResultSet rs = pst.executeQuery();
-            if (rs.next()) {                
+            int rs = pst.executeUpdate();
+            if (rs>0) {                
                 return 1;
       } else {
                 // Error in query execution

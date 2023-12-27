@@ -11,11 +11,10 @@ package dto;
  */
 public class Logout extends GsonHandler{
     public String username;
-    public String status;
     
-    public Logout(String username , String status) {
+    
+    public Logout(String username ) {
         this.username = username;
-        this.status=status;
     }
     
 }

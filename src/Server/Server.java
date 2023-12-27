@@ -74,7 +74,7 @@ public class Server extends Thread {
     void removeClient(String playerName) {
         if (playerName != null) {
             clientsMap.remove(playerName);
-            updateAllClientsStatusOffline();
+            //    updateAllClientsStatusOffline();
         }
     }
 
@@ -82,26 +82,13 @@ public class Server extends Thread {
         TicTacToeHandler handler = clientsMap.get(playerName);
         if (handler != null) {
             handler.sendMessage(result);
+            System.out.println(result);
         }
     }
 
     private int getCurrentTime() {
         // Implement logic to get the current time
         return 0; // Placeholder, replace with actual implementation
-    }
-
-    public void updatePieChart() {
-        int onlineCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("online")).count();
-        int offlineCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("offline")).count();
-        int busyCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("busy")).count();
-
-        if (startPageBase != null) {
-            //startPageBase.updateLineChart(onlineCount, offlineCount, busyCount);
-
-            // Assuming you have some mechanism to track time, pass the time and online count to update the line chart
-            int currentTime = getCurrentTime(); // Implement this method to get the current time
-            //  startPageBase.updateLineChart(currentTime, onlineCount);
-        }
     }
 
     private void updateAllClientsStatusOffline() {
@@ -146,7 +133,6 @@ class TicTacToeHandler extends Thread {
     private Server server;
     private DTOPlayer player; // Declare the player variable here
     String clientRequest;
-    private String playerStatus;
 
     public TicTacToeHandler(Socket clientSocket, Server server) {
         this.clientSocket = clientSocket;
@@ -160,9 +146,10 @@ class TicTacToeHandler extends Thread {
             this.dis = new DataInputStream(clientSocket.getInputStream());
             this.ps = new PrintStream(clientSocket.getOutputStream());
             String clientRequestBody = dis.readLine();
+            System.out.println("clientRequestBody");
             DBHandler dbHandler = new DBHandler();
             ClientRequest clientRequest = new Gson().fromJson(clientRequestBody, ClientRequest.class);
-
+            
 //            JsonObject jsonObject = new Gson().fromJson(clientRequestBody, JsonObject.class);
 //            clientRequest = jsonObject.get("request").getAsString();
             int result;
@@ -198,12 +185,18 @@ class TicTacToeHandler extends Thread {
                     server.registerClient(player.getName(), this);
                     server.sendResponseToClient(player.getName(), json);
                     break;
-
                 case "signOut":
                     Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
                     player.setName(playerStatus.username);
-                    player.setStatus("offline");
+                  //  player.setStatus("offline"); // Set the player's status to "offline"
+                    result = dbHandler.signOut(player);
                     server.removeClient(player.getName());
+
+                    // Notify other clients about the player's status update
+                  //  server.sendPlayerStatusUpdate(player.getName(), "offline");
+
+                    // Send a response to the client indicating the sign-out result
+                    server.sendResponseToClient(player.getName(), String.valueOf(result));
                     break;
 
             }
@@ -238,13 +231,4 @@ class TicTacToeHandler extends Thread {
         ps.println(msg);
     }
 
-    public void updatePlayerStatus(String status) {
-        playerStatus = status;
-        server.updatePieChart();
-        server.sendPlayerStatusUpdate(player.getName(), playerStatus);
-    }
-
-    public String getPlayerStatus() {
-        return playerStatus;
-    }
 }
