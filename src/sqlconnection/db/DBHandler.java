@@ -219,7 +219,35 @@ private boolean playerExists(String playerName) throws SQLException {
              }
              return count;     
        }   
-     
+       public void logout(String playerName) {
+        try {
+            updateStatus(playerName, "offline");
+        } catch (SQLException e) {
+            // Handle SQLException appropriately (print or log the exception)
+            e.printStackTrace();
+        }
+    } 
+    public int signOut (DTOPlayer player )         
+    {
+         String sqlSelect = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
+
+        try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
+            pst.setString(1, player.getName());
+            pst.setString(2, "offline");
+            
+            ResultSet rs = pst.executeQuery();
+            if (rs.next()) {                
+                return 1;
+      } else {
+                // Error in query execution
+                System.out.println("Logut failed: Database query error");
+                return -1;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
+        }
+    }
      /*public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
         try {
             String sql = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";

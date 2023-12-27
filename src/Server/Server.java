@@ -6,6 +6,7 @@ import dto.Authentication;
 import dto.ClientRequest;
 import dto.DTOPlayer;
 import dto.GameStatus;
+import dto.Logout;
 import sqlconnection.db.DBHandler;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class Server extends Thread {
     private volatile boolean running = true;
     private ConcurrentHashMap<String, TicTacToeHandler> clientsMap = new ConcurrentHashMap<>();
     private StartPageBase startPageBase;
-   
+
     public Server() {
         try {
             serverSocket = new ServerSocket(5005);
@@ -44,13 +45,12 @@ public class Server extends Thread {
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
-                
+
             }
         } catch (IOException ex) {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 
     public void run() {
         while (running) {
@@ -67,17 +67,15 @@ public class Server extends Thread {
         }
     }
 
-
-
     void registerClient(String playerName, TicTacToeHandler handler) {
         clientsMap.put(playerName, handler);
     }
 
-   void removeClient(String playerName) {
-         if (playerName != null) {
-             clientsMap.remove(playerName);
-             updateAllClientsStatusOffline();
-         }
+    void removeClient(String playerName) {
+        if (playerName != null) {
+            clientsMap.remove(playerName);
+            updateAllClientsStatusOffline();
+        }
     }
 
     void sendResponseToClient(String playerName, String result) {
@@ -86,10 +84,11 @@ public class Server extends Thread {
             handler.sendMessage(result);
         }
     }
+
     private int getCurrentTime() {
-    // Implement logic to get the current time
-    return 0; // Placeholder, replace with actual implementation
-}
+        // Implement logic to get the current time
+        return 0; // Placeholder, replace with actual implementation
+    }
 
     public void updatePieChart() {
         int onlineCount = (int) clientsMap.values().stream().filter(handler -> handler.getPlayerStatus().equals("online")).count();
@@ -101,9 +100,10 @@ public class Server extends Thread {
 
             // Assuming you have some mechanism to track time, pass the time and online count to update the line chart
             int currentTime = getCurrentTime(); // Implement this method to get the current time
-          //  startPageBase.updateLineChart(currentTime, onlineCount);
+            //  startPageBase.updateLineChart(currentTime, onlineCount);
         }
     }
+
     private void updateAllClientsStatusOffline() {
         for (Map.Entry<String, TicTacToeHandler> entry : clientsMap.entrySet()) {
             String playerName = entry.getKey();
@@ -116,13 +116,14 @@ public class Server extends Thread {
             }
         }
     }
+
     public void sendPlayerStatusUpdate(String playerName, String status) {
         for (Map.Entry<String, TicTacToeHandler> entry : clientsMap.entrySet()) {
             String otherPlayerName = entry.getKey();
             if (!otherPlayerName.equals(playerName)) {
                 TicTacToeHandler handler = entry.getValue();
                 handler.sendMessage(createPlayerStatusUpdateMessage(playerName, status));
-                updateAllClientsStatusOffline();           
+                updateAllClientsStatusOffline();
             }
         }
     }
@@ -136,6 +137,7 @@ public class Server extends Thread {
     }
 
 }
+
 class TicTacToeHandler extends Thread {
 
     private DataInputStream dis;
@@ -145,7 +147,8 @@ class TicTacToeHandler extends Thread {
     private DTOPlayer player; // Declare the player variable here
     String clientRequest;
     private String playerStatus;
-       public TicTacToeHandler(Socket clientSocket, Server server) {
+
+    public TicTacToeHandler(Socket clientSocket, Server server) {
         this.clientSocket = clientSocket;
         this.server = server;
         start();
@@ -168,7 +171,7 @@ class TicTacToeHandler extends Thread {
                 case "signUp":
                     //player.setName(jsonObject.getAsJsonObject("player").get("name").getAsString());
                     //player.setPassword(jsonObject.getAsJsonObject("player").get("password").getAsString());
-                    Authentication signUp = new Gson().fromJson(clientRequest.data, Authentication.class);                 
+                    Authentication signUp = new Gson().fromJson(clientRequest.data, Authentication.class);
                     player.setName(signUp.userName);
                     player.setPassword(signUp.password);
                     player.setScore(0);
@@ -176,14 +179,14 @@ class TicTacToeHandler extends Thread {
                     server.registerClient(player.getName(), this);
                     server.sendResponseToClient(player.getName(), String.valueOf(result));
                     break;
-                
-              case "signIn":
-                    Authentication signIn = new Gson().fromJson(clientRequest.data, Authentication.class);                 
+
+                case "signIn":
+                    Authentication signIn = new Gson().fromJson(clientRequest.data, Authentication.class);
                     player.setName(signIn.userName);
                     player.setPassword(signIn.password);
                     result = dbHandler.signIn(player);
                     server.registerClient(player.getName(), this);
-                    server.sendResponseToClient(player.getName(),  String.valueOf(result));
+                    server.sendResponseToClient(player.getName(), String.valueOf(result));
                     break;
                 case "onlineUsers":
                     GameStatus gameStatus = new Gson().fromJson(clientRequest.data, GameStatus.class);
@@ -193,26 +196,38 @@ class TicTacToeHandler extends Thread {
                     Gson gson = new Gson();
                     String json = gson.toJson(availablePlayersList);
                     server.registerClient(player.getName(), this);
-                    server.sendResponseToClient(player.getName(),json);
+                    server.sendResponseToClient(player.getName(), json);
                     break;
-                case "playerStatusUpdate":
-                    handlePlayerStatusUpdate(clientRequest.data);
+
+                case "signOut":
+                    Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
+                    player.setName(playerStatus.username);
+                    player.setStatus("offline");
+                    server.removeClient(player.getName());
                     break;
-    
+
             }
 
         } catch (SocketException e) {
             // Handle socket closed gracefully
-           // Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
+            // Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
         } catch (IOException ex) {
             Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "IO error", ex);
         } finally {
             // Clean up resources and remove client from the server's map
-            if(clientRequest=="SignUp")server.removeClient(player.getName());
+            if (clientRequest == "SignUp") {
+                server.removeClient(player.getName());
+            }
             try {
-                if (dis != null) dis.close();
-                if (ps != null) ps.close();
-                if (clientSocket != null && !clientSocket.isClosed()) clientSocket.close();
+                if (dis != null) {
+                    dis.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (clientSocket != null && !clientSocket.isClosed()) {
+                    clientSocket.close();
+                }
             } catch (IOException ex) {
                 Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Error closing resources", ex);
             }
@@ -232,19 +247,4 @@ class TicTacToeHandler extends Thread {
     public String getPlayerStatus() {
         return playerStatus;
     }
-    private void handlePlayerStatusUpdate(String data) {
-    JsonObject updateObject = new Gson().fromJson(data, JsonObject.class);
-    String playerName = updateObject.get("playerName").getAsString();
-    String status = updateObject.get("status").getAsString();
-    server.sendResponseToClient(playerName, createPlayerStatusUpdateMessage(playerName, status));
-    }
- private String createPlayerStatusUpdateMessage(String playerName, String status) {
-        JsonObject updateObject = new JsonObject();
-        updateObject.addProperty("event", "playerStatusUpdate");
-        updateObject.addProperty("playerName", playerName);
-        updateObject.addProperty("status", status);
-        return updateObject.toString();
-    }
 }
-
-
