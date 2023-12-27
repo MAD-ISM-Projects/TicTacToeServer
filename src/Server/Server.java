@@ -79,8 +79,8 @@ public class Server extends Thread {
     synchronized void sendResponseToClient(String playerName, String result) {
         TicTacToeHandler handler = clientsMap.get(playerName);
         if (handler != null) {
-            
-        System.out.println("handler " + handler.toString() + " for " + playerName);
+
+            System.out.println("handler " + handler.toString() + " for " + playerName);
             handler.sendMessage(result);
         }
     }
@@ -159,15 +159,17 @@ class TicTacToeHandler extends Thread {
                     case "gameInvitation":
                         Invitation inv = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(inv.getOpponentName(), clientRequestBody);
+                        System.out.println("game invi p1 from server  "+inv.getPlayerName()+" p2 from server "+inv.getOpponentName());
                         break;
                     case "responseInvitation":
                         Invitation res = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(res.getPlayerName(), clientRequestBody);
+                        System.out.println("response p1 from server  "+res.getPlayerName()+" p2 from server "+res.getOpponentName());
                         System.out.println("ReqInvitation================1");
                         break;
                 }
             }
-            
+
         } catch (SocketException e) {
             // Handle socket closed gracefully
             // Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
