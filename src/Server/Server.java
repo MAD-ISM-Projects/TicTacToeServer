@@ -10,6 +10,7 @@ import dto.ClientRequestHeader;
 import dto.DTOPlayer;
 import dto.GameStatus;
 import dto.Invitation;
+import dto.Logout;
 import dto.invitationResponseStatus;
 import sqlconnection.db.DBHandler;
 import java.io.DataInputStream;
@@ -159,7 +160,21 @@ class TicTacToeHandler extends Thread {
                         Invitation ref = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(ref.getPlayerName(), clientRequest.toJson());
                         break;
-                        
+                                     case "signOut":
+                    Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
+                    player.setName(playerStatus.username);
+                  //  player.setStatus("offline"); // Set the player's status to "offline"
+                    result = dbHandler.signOut(player);
+                    server.removeClient(player.getName());
+
+                    // Notify other clients about the player's status update
+                  //  server.sendPlayerStatusUpdate(player.getName(), "offline");
+
+                    // Send a response to the client indicating the sign-out result
+                    server.sendResponseToClient(player.getName(), String.valueOf(result));
+                    break;
+
+   
                 }
             }
 

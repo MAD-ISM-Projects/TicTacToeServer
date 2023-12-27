@@ -1,5 +1,3 @@
-
-
 package sqlconnection.db;
 
 import com.google.gson.Gson;
@@ -21,13 +19,13 @@ import org.apache.derby.jdbc.ClientDriver;
  *
  * @author Ramez
  */
+public class DBHandler {
 
-
-public class DBHandler{
     private Connection connection;
     PreparedStatement pst;
-    public DBHandler(){
-           try {
+
+    public DBHandler() {
+        try {
             DriverManager.registerDriver(new ClientDriver());
             connection = DriverManager.getConnection("jdbc:derby://localhost:1527/players", "root", "root");
 
@@ -36,56 +34,56 @@ public class DBHandler{
         }
     }
 
-     public int signUp(DTOPlayer player) {
-    try {
-        // Check if the player with the given name already exists
-        if (playerExists(player.getName())) {
-            System.out.println("Player with the name " + player.getName() + " already exists.");
-            return 0; // Return 0 to indicate that the sign-up failed
-        }
+    public int signUp(DTOPlayer player) {
+        try {
+            // Check if the player with the given name already exists
+            if (playerExists(player.getName())) {
+                System.out.println("Player with the name " + player.getName() + " already exists.");
+                return 0; // Return 0 to indicate that the sign-up failed
+            }
 
-        String sqlinsert = "INSERT INTO ROOT.PLAYERS (NAME, PASSWORD, STATUS, SCORE) VALUES (?, ?, ?, ?)";
-        PreparedStatement pst = connection.prepareStatement(sqlinsert);
-        pst.setString(1, player.getName());
-        pst.setString(2, player.getPassword());
-        pst.setString(3, "offline");
-        pst.setString(4, String.valueOf(player.getScore()));
+            String sqlinsert = "INSERT INTO ROOT.PLAYERS (NAME, PASSWORD, STATUS, SCORE) VALUES (?, ?, ?, ?)";
+            PreparedStatement pst = connection.prepareStatement(sqlinsert);
+            pst.setString(1, player.getName());
+            pst.setString(2, player.getPassword());
+            pst.setString(3, "offline");
+            pst.setString(4, String.valueOf(player.getScore()));
 
-        int rs = pst.executeUpdate();
-        if (rs <= 0) {
-            System.out.println("Insert failed");
-        } else {
-            System.out.println("Insert succeeded");
+            int rs = pst.executeUpdate();
+            if (rs <= 0) {
+                System.out.println("Insert failed");
+            } else {
+                System.out.println("Insert succeeded");
+            }
+            return rs;
+        } catch (SQLException ex) {
+            // Handle SQLException (print or log the exception, and consider proper error handling)
+            ex.printStackTrace();
         }
-        return rs;
-    } catch (SQLException ex) {
-        // Handle SQLException (print or log the exception, and consider proper error handling)
-        ex.printStackTrace();
+        return 0;
     }
-    return 0;
-}
 
 // Helper method to check if a player with the given name already exists
-private boolean playerExists(String playerName) throws SQLException {
-    String query = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
-    try (PreparedStatement pst = connection.prepareStatement(query)) {
-        pst.setString(1, playerName);
-        try (ResultSet resultSet = pst.executeQuery()) {
-            if (resultSet.next()) {
+    private boolean playerExists(String playerName) throws SQLException {
+        String query = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ?";
+        try (PreparedStatement pst = connection.prepareStatement(query)) {
+            pst.setString(1, playerName);
+            try (ResultSet resultSet = pst.executeQuery()) {
+                if (resultSet.next()) {
                     return true;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
- 
-       public int signIn(DTOPlayer player) {
+
+    public int signIn(DTOPlayer player) {
         String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE NAME = ? AND PASSWORD = ?";
 
         try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
             pst.setString(1, player.getName());
             pst.setString(2, player.getPassword());
-            
+
             ResultSet rs = pst.executeQuery();
             if (rs.next()) {
                 updateStatus(player.getName(), "online");
@@ -113,16 +111,16 @@ private boolean playerExists(String playerName) throws SQLException {
         }
     }
 
-     private void updateStatus(String playerName, String status) throws SQLException {
+    private void updateStatus(String playerName, String status) throws SQLException {
         String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
         try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
             updateStatement.setString(1, status);
             updateStatement.setString(2, playerName);
             updateStatement.executeUpdate();
         }
-    }   
-    
-     /*public ArrayList<UserOnline> getOnlinePlayers() throws SQLException {
+    }
+
+    /*public ArrayList<UserOnline> getOnlinePlayers() throws SQLException {
 
         ArrayList<UserOnline> onlinePlayers = new ArrayList<>();
 
@@ -149,8 +147,8 @@ private boolean playerExists(String playerName) throws SQLException {
         String sqlSelect = "SELECT * FROM ROOT.PLAYERS WHERE STATUS = 'online' AND NAME <> ?";
 
         try (PreparedStatement selectOnline = connection.prepareStatement(sqlSelect)) {
-             selectOnline.setString(1, playerName);
-             ResultSet rs = selectOnline.executeQuery();
+            selectOnline.setString(1, playerName);
+            ResultSet rs = selectOnline.executeQuery();
 
             while (rs.next()) {
                 // Retrieve values from the result set and create a DTOPlayer object
@@ -167,8 +165,8 @@ private boolean playerExists(String playerName) throws SQLException {
         }
         return onlinePlayers;
     }
-     
-     public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
+
+    public boolean makePlayerBusy(DTOPlayer player1, DTOPlayer player2) {
         try {
             String sql = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
             PreparedStatement pst = connection.prepareStatement(sql);
@@ -176,19 +174,91 @@ private boolean playerExists(String playerName) throws SQLException {
             pst.setString(2, player1.getName());
             pst.setString(3, player2.getName());
             int rs = pst.executeUpdate();
-            System.out.println(" rs = "+rs);
-            return rs!=0;
+            System.out.println(" rs = " + rs);
+            return rs != 0;
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }finally{
+        } finally {
             return false;
-        }  
-      }
+        }
+    }
+
+    public synchronized int getOnlineRate() throws SQLException {
+        String sql = "SELECT COUNT(NAME) AS total FROM ROOT.PLAYERS WHERE STATUS = ?";
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setString(1, "online");
+        int count = 0;
+        ResultSet rs = pst.executeQuery();
+        while (rs.next()) {
+            count = rs.getInt("total");
+        }
+        return count;
+    }
+
+    public synchronized int getbusyeRate() throws SQLException {
+        String sql = "select COUNT(NAME) AS total FROM  ROOT.PLAYERS WHERE STATUS = ?";
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setString(1, "busy");
+        int count = 0;
+        ResultSet rs = pst.executeQuery();
+        while (rs.next()) {
+            count = rs.getInt("total");
+        }
+        return count;
+    }
+
+    public synchronized int getOfflineRate() throws SQLException {
+        String sql = "select COUNT(NAME) AS total FROM  ROOT.PLAYERS WHERE STATUS = ?";
+        PreparedStatement pst = connection.prepareStatement(sql);
+        pst.setString(1, "offline");
+        int count = 0;
+        ResultSet rs = pst.executeQuery();
+        while (rs.next()) {
+            count = rs.getInt("total");
+        }
+        return count;
+    }
+
+    public void logout(String playerName) {
+        try {
+            updateStatus(playerName, "offline");
+        } catch (SQLException e) {
+            // Handle SQLException appropriately (print or log the exception)
+            e.printStackTrace();
+        }
+    }
+
+    public int signOut(DTOPlayer player) {
+        String sqlSelect = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
+
+        try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
+            pst.setString(2, player.getName());
+            pst.setString(1, "offline");
+
+            int rs = pst.executeUpdate();
+            if (rs > 0) {
+                return 1;
+            } else {
+                // Error in query execution
+                System.out.println("Logut failed: Database query error");
+                return -1;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
+        }
+    }
+
+    public void updateAllPlayersStatusOffline() throws SQLException {
+        String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = 'offline'";
+        try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
+            updateStatement.executeUpdate();
+        }
+    }
+
 }
-    
-     
-     
-     /*public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
+
+/*public boolean makePlayerBusy(DTOPlayer player1,DTOPlayer player2){
         try {
             String sql = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
             PreparedStatement pst = connection.prepareStatement(sql);
@@ -218,5 +288,3 @@ private boolean playerExists(String playerName) throws SQLException {
             }
     }
 }*/
-
-

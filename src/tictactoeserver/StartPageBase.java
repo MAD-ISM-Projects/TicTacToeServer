@@ -1,24 +1,26 @@
 package tictactoeserver;
 
-import java.net.ServerSocket;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import server.Server;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.NodeOrientation;
-import javafx.geometry.Pos;
-import javafx.scene.chart.PieChart;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
 import sqlconnection.db.DBHandler;
-
 
 public class StartPageBase extends AnchorPane {
 
@@ -28,13 +30,20 @@ public class StartPageBase extends AnchorPane {
     protected final Text gamText;
     protected final Text text;
     protected final ImageView imageView;
-    protected final PieChart pieChart;
     protected final Button startStopButton;
-    //ServerSocket serverSocket;
-      static Server server;
+    protected final PieChart pieChart;
+    protected final Label label0;
+    protected final Label label1;
+    protected final Label label2;
+    protected final Label online;
+    protected final Label offline;
+    protected final Label busy;
+    static Server server;
+    private DBHandler test;
+    private Thread dataUpdateThread;
 
-    public StartPageBase() {
-
+    public StartPageBase(Stage stage) throws IOException, SQLException {
+        test = new DBHandler();
         label = new Label();
         tictoeText = new Text();
         miniText = new Text();
@@ -43,11 +52,16 @@ public class StartPageBase extends AnchorPane {
         imageView = new ImageView();
         startStopButton = new Button();
         pieChart = new PieChart();
-
+        label0 = new Label();
+        label1 = new Label();
+        label2 = new Label();
+        online = new Label();
+        offline = new Label();
+        busy = new Label();
 
         setId("AnchorPane");
-        setPrefHeight(550.0);
-        setPrefWidth(800.0);
+        setPrefHeight(500.0);
+        setPrefWidth(850.0);
         setStyle("-fx-background-color: #34365C;");
 
         label.setLayoutX(126);
@@ -92,33 +106,10 @@ public class StartPageBase extends AnchorPane {
 
         imageView.setFitHeight(248.0);
         imageView.setFitWidth(345.0);
-        imageView.setLayoutX(445.0);
-        imageView.setLayoutY(154.0);
+        imageView.setLayoutX(456.0);
+        imageView.setLayoutY(72.0);
         imageView.setPickOnBounds(true);
         imageView.setPreserveRatio(true);
-
-        pieChart.setLayoutX(393.0);
-        pieChart.setLayoutY(62.0);
-        pieChart.getData().addAll(
-            new PieChart.Data("Online", 10),
-            new PieChart.Data("Offline", 10),
-            new PieChart.Data("Busy", 10)
-        );
-            
-        traverseSceneGraph(pieChart, Color.WHITE);
-        pieChart.setLegendVisible(true);
-        pieChart.setVisible(false);
-        pieChart.setFocusTraversable(true);
-        pieChart.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
-        pieChart.setOpacity(1.0);
-        pieChart.setPickOnBounds(true);
-        pieChart.setPrefHeight(347.0);
-        pieChart.setPrefWidth(403.0);
-        pieChart.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        pieChart.setRotate(0.0);
-        pieChart.setStartAngle(141.0);
-        pieChart.setOpaqueInsets(new Insets(0.0));
-        setCustomColors();
 
         startStopButton.setLayoutX(98.0);
         startStopButton.setLayoutY(334.0);
@@ -132,55 +123,190 @@ public class StartPageBase extends AnchorPane {
             if ("Start".equals(startStopButton.getText())) {
                 startStopButton.setText("Stop");
 
-                        pieChart.setVisible(true);
+                online.setVisible(true);
+                offline.setVisible(true);
+                busy.setVisible(true);
+                pieChart.setVisible(true);
 
-                // Run server creation on a separate thread
-                new Thread(() -> {
+                dataUpdateThread = new Thread(() -> {
                     try {
                         server = new Server();
+                        while ("Stop".equals(startStopButton.getText())) {
+                            fetchDataAndUpdateLabels(pieChart);
+                            TimeUnit.MICROSECONDS.sleep(500);
+                        }
+                    } catch (InterruptedException e) {
+                        // Handle interruption
+                        System.out.println("Exiting loop");
                     } catch (Exception e) {
                         e.printStackTrace(); // Handle the exception appropriately
                         Platform.runLater(() -> startStopButton.setText("Start"));
                     }
-                }).start();
+                });
+                dataUpdateThread.start();
             } else {
                 startStopButton.setText("Start");
-                        pieChart.setVisible(false);
+                pieChart.setVisible(false);
+                online.setText("0");
+                offline.setText("0");
+                busy.setText("0");
+                online.setVisible(false);
+                offline.setVisible(false);
+                busy.setVisible(false);
 
+                if (dataUpdateThread != null && dataUpdateThread.isAlive()) {
+                    dataUpdateThread.interrupt();
+                }
 
-                // Run server stopping on the JavaFX Application Thread
                 Platform.runLater(() -> {
                     if (server != null) {
                         server.stopServer();
                     }
+                    fetchDataAndUpdateLabels(pieChart);
+                    updateAllPlayersStatusOffline();
                 });
             }
         });
 
+        pieChart.setLayoutX(435.0);
+        pieChart.setLayoutY(62.0);
+        pieChart.setPrefHeight(258.0);
+        pieChart.setPrefWidth(366.0);
 
-        
+        label0.setLayoutX(480.0);
+        label0.setLayoutY(334.0);
+        label0.setText("Online");
+        label0.setTextFill(javafx.scene.paint.Color.WHITE);
+
+        label1.setLayoutX(480.0);
+        label1.setLayoutY(360.0);
+        label1.setText("Offline");
+        label1.setTextFill(javafx.scene.paint.Color.valueOf("#f518ec"));
+
+        label2.setLayoutX(487.0);
+        label2.setLayoutY(392.0);
+        label2.setText("Basy");
+        label2.setTextFill(javafx.scene.paint.Color.valueOf("#1a0538"));
+
+        online.setLayoutX(551.0);
+        online.setLayoutY(334.0);
+        online.setText("0");
+        online.setTextFill(javafx.scene.paint.Color.WHITE);
+        online.setVisible(false);
+
+        offline.setLayoutX(551.0);
+        offline.setLayoutY(360.0);
+        offline.setText("0");
+        offline.setTextFill(javafx.scene.paint.Color.WHITE);
+        offline.setVisible(false);
+        busy.setLayoutX(551.0);
+        busy.setLayoutY(392.0);
+        busy.setText("0");
+        busy.setTextFill(javafx.scene.paint.Color.WHITE);
+        busy.setVisible(false);
+        initPieChart(pieChart);
+        initLabels();
         getChildren().add(label);
         getChildren().add(tictoeText);
         getChildren().add(miniText);
         getChildren().add(gamText);
         getChildren().add(text);
         getChildren().add(imageView);
-        getChildren().add(pieChart);
         getChildren().add(startStopButton);
+        getChildren().add(pieChart);
+        getChildren().add(label0);
+        getChildren().add(label1);
+        getChildren().add(label2);
+        getChildren().add(online);
+        getChildren().add(offline);
+        getChildren().add(busy);
 
     }
 
-    private void setCenter(PieChart pieChart) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private void initPieChart(PieChart pieChart) {
+        pieChart.setLayoutX(435.0);
+        pieChart.setLayoutY(62.0);
+        pieChart.setPrefHeight(258.0);
+        pieChart.setPrefWidth(366.0);
+        int onlineValue = Integer.parseInt(online.getText());
+        int offlineValue = Integer.parseInt(offline.getText());
+        int busyValue = Integer.parseInt(busy.getText());
+
+        pieChart.getData().addAll(
+                new PieChart.Data("Online", onlineValue),
+                new PieChart.Data("Offline", offlineValue),
+                new PieChart.Data("Busy", busyValue)
+        );
+        traverseSceneGraph(pieChart, Color.WHITE);
+        setCustomColors();
     }
-    private void traverseSceneGraph(PieChart chart, Color color) {
-        for (javafx.scene.Node node : chart.lookupAll(".text.chart-pie-label")) {
-            if (node instanceof javafx.scene.text.Text) {
-                ((javafx.scene.text.Text) node).setFill(color);
+
+    private void initLabels() {
+        label0.setLayoutX(480.0);
+        label0.setLayoutY(334.0);
+        label0.setText("Online");
+        label0.setTextFill(javafx.scene.paint.Color.WHITE);
+
+        label1.setLayoutX(480.0);
+        label1.setLayoutY(360.0);
+        label1.setText("Offline");
+        label1.setTextFill(javafx.scene.paint.Color.valueOf("#f518ec"));
+
+        label2.setLayoutX(487.0);
+        label2.setLayoutY(392.0);
+        label2.setText("Busy");
+        label2.setTextFill(javafx.scene.paint.Color.valueOf("#1a0538"));
+
+        online.setLayoutX(551.0);
+        online.setLayoutY(334.0);
+        online.setText("0");
+        online.setTextFill(javafx.scene.paint.Color.WHITE);
+
+        offline.setLayoutX(551.0);
+        offline.setLayoutY(360.0);
+        offline.setText("0");
+        offline.setTextFill(javafx.scene.paint.Color.WHITE);
+
+        busy.setLayoutX(551.0);
+        busy.setLayoutY(392.0);
+        busy.setText("0");
+        busy.setTextFill(javafx.scene.paint.Color.WHITE);
+    }
+
+    private void fetchDataAndUpdateLabels(PieChart pieChart) {
+        if ("Stop".equals(startStopButton.getText())) {
+            try {
+                // Fetch online, offline, busy values from the database
+                int onlineValue = test.getOnlineRate();
+                int offlineValue = test.getOfflineRate();
+                int busyValue = test.getbusyeRate();
+
+                // Update the labels and pie chart on the JavaFX Application Thread
+                Platform.runLater(() -> {
+                    online.setText(String.valueOf(onlineValue));
+                    offline.setText(String.valueOf(offlineValue));
+                    busy.setText(String.valueOf(busyValue));
+
+                    updatePieChart(onlineValue, offlineValue, busyValue);
+
+                });
+
+            } catch (SQLException ex) {
+                Logger.getLogger(StartPageBase.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
+
+    private void updatePieChart(int onlineValue, int offlineValue, int busyValue) {
+        ObservableList<PieChart.Data> pieChartData = pieChart.getData();
+        pieChartData.get(0).setPieValue(onlineValue);
+        pieChartData.get(1).setPieValue(offlineValue);
+        pieChartData.get(2).setPieValue(busyValue);
+        setCustomColors();
+    }
+
     private void setCustomColors() {
+
         // Get the data slices
         PieChart.Data[] dataSlices = new PieChart.Data[pieChart.getData().size()];
         pieChart.getData().toArray(dataSlices);
@@ -196,8 +322,25 @@ public class StartPageBase extends AnchorPane {
                 style = "-fx-pie-color: #FF8FDA;"; // Offline color
             }
             dataSlice.getNode().setStyle(style);
-            System.out.println("Style applied for " + dataSlice.getName() + ": " + style);
+            // System.out.println("Style applied for " + dataSlice.getName() + ": " + style);
         }
     }
 
+    private void traverseSceneGraph(PieChart chart, Color color) {
+        for (Node node : chart.lookupAll(".text.chart-pie-label")) {
+            if (node instanceof Text) {
+                ((Text) node).setFill(color);
+            }
+        }
+    }
+
+    private void updateAllPlayersStatusOffline() {
+        try {
+            DBHandler dbHandler = new DBHandler();
+            dbHandler.updateAllPlayersStatusOffline();
+        } catch (SQLException e) {
+            // Handle SQLException appropriately (print or log the exception)
+            e.printStackTrace();
+        }
+    }
 }
