@@ -10,6 +10,7 @@ import dto.ClientRequestHeader;
 import dto.DTOPlayer;
 import dto.GameStatus;
 import dto.Invitation;
+import dto.NextStep;
 import dto.invitationResponseStatus;
 import sqlconnection.db.DBHandler;
 import java.io.DataInputStream;
@@ -28,7 +29,7 @@ public class Server extends Thread {
 
     private ServerSocket serverSocket;
     private volatile boolean running = true;
-    private ConcurrentHashMap<String, TicTacToeHandler> clientsMap = new ConcurrentHashMap<>();
+    protected ConcurrentHashMap<String, TicTacToeHandler> clientsMap = new ConcurrentHashMap<>();
 
     public Server() {
         try {
@@ -159,19 +160,24 @@ class TicTacToeHandler extends Thread {
                     case "gameInvitation":
                         Invitation inv = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(inv.getOpponentName(), clientRequest.toJson());
-                        System.out.println("game invi p1 from server  "+inv.getPlayerName()+" p2 from server "+inv.getOpponentName());
+                        System.out.println("game invi p1 from server  " + inv.getPlayerName() + " p2 from server " + inv.getOpponentName());
                         break;
                     case "responseInvitation":
                         Invitation res = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(res.getPlayerName(), clientRequest.toJson());
-                        System.out.println("response p1 from server  "+res.getPlayerName()+" p2 from server "+res.getOpponentName());
+                        System.out.println("response p1 from server  " + res.getPlayerName() + " p2 from server " + res.getOpponentName());
                         System.out.println("ReqInvitation================1");
                         break;
                     case "refusedInvitation":
                         Invitation ref = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(ref.getPlayerName(), clientRequest.toJson());
                         break;
-                        
+                    case "nextStep":
+                        NextStep nextStep = new Gson().fromJson(clientRequest.data, NextStep.class);
+                        server.sendResponseToClient(nextStep.getOpponentName(), clientRequest.toJson());
+                        System.out.println("What " + nextStep.getOpponentName() + " =index= "+nextStep.getNextStepIndex());
+                        break;
+
                 }
             }
 
