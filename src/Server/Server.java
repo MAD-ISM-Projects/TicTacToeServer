@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import static com.sun.corba.se.spi.presentation.rmi.StubAdapter.request;
 //import static com.sun.xml.internal.ws.api.message.Packet.State.ClientRequest;
+
 import dto.Authentication;
 import dto.ClientRequest;
 import dto.ClientRequestHeader;
@@ -110,16 +111,15 @@ class TicTacToeHandler extends Thread {
             this.ps = new PrintStream(clientSocket.getOutputStream());
 
             DBHandler dbHandler = new DBHandler();
-            while (true) {
-                String clientRequestBody = dis.readLine();
-                if (clientRequestBody != null) {
-                    System.out.println(clientRequestBody + " ++++++++++++++++++++++++++");
-                }
-                ClientRequest clientRequest = new Gson().fromJson(clientRequestBody, ClientRequest.class);
+             while (true) {
+            String clientRequestBody = dis.readLine();
+            if (clientRequestBody != null) {
+                System.out.println(clientRequestBody + " ++++++++++++++++++++++++++");
+            }
+            ClientRequest clientRequest = new Gson().fromJson(clientRequestBody, ClientRequest.class);
 
-//            JsonObject jsonObject = new Gson().fromJson(clientRequestBody, JsonObject.class);
-//            clientRequest = jsonObject.get("request").getAsString();
-                int result;
+            int result;
+
 
                 switch (clientRequest.request) {
                     case "signUp":
@@ -171,15 +171,17 @@ class TicTacToeHandler extends Thread {
                         break;
                     case "signOut":
                         Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
-                        player.setName(playerStatus.username);
-                        //  player.setStatus("offline"); // Set the player's status to "offline"
-                        result = dbHandler.signOut(player);
-                        server.removeClient(player.getName());
-
-                        // Notify other clients about the player's status update
-                        //  server.sendPlayerStatusUpdate(player.getName(), "offline");
-                        // Send a response to the client indicating the sign-out result
-                        server.sendResponseToClient(player.getName(), String.valueOf(result));
+                        if (playerStatus != null && playerStatus.username != null) {
+                            player.setName(playerStatus.username);
+                         
+                            // player.setStatus("offline");
+                            result = dbHandler.signOut(player);
+                           server.sendResponseToClient(player.getName(), String.valueOf(result));
+                            closeThread();
+                            server.removeClient(player.getName());
+                        } else {
+                            System.out.println("Invalid signOut request: " + clientRequest.data);
+                        }
                         break;
 
                 }
@@ -187,9 +189,31 @@ class TicTacToeHandler extends Thread {
 
         } catch (SocketException e) {
             // Handle socket closed gracefully
-            // Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
+             System.out.println("Socket closed");
+            //  Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
         } catch (IOException ex) {
             Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "IO error", ex);
+        }
+        finally{
+        closeThread();
+        }
+    }
+    //close the thread and release resources
+
+    private void closeThread() {
+        try {
+          
+            if (dis != null) {
+                dis.close();
+            }
+            if (ps != null) {
+                ps.close();
+            }
+            if (clientSocket != null && !clientSocket.isClosed()) {
+                clientSocket.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Error closing resources", ex);
         }
     }
 
