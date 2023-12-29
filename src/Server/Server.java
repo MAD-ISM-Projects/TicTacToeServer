@@ -1,19 +1,17 @@
 package server;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import static com.sun.corba.se.spi.presentation.rmi.StubAdapter.request;
 //import static com.sun.xml.internal.ws.api.message.Packet.State.ClientRequest;
 
 import dto.Authentication;
 import dto.ClientRequest;
-import dto.ClientRequestHeader;
+import static dto.ClientRequestHeader.PlayerBusy;
 import dto.DTOPlayer;
 import dto.GameStatus;
 import dto.Invitation;
 import dto.Logout;
 import dto.NextStep;
-import dto.invitationResponseStatus;
+import dto.PlayerBusy;
 import sqlconnection.db.DBHandler;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -22,7 +20,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -187,6 +184,15 @@ class TicTacToeHandler extends Thread {
                         } else {
                             System.out.println("Invalid signOut request: " + clientRequest.data);
                         }
+                        break;
+                    case "playerBusy":
+                        PlayerBusy busy = new Gson().fromJson(clientRequest.data, PlayerBusy.class);
+                        player.setName(busy.name);
+                        result = dbHandler.makePlayerBusy(player);
+                        server.sendResponseToClient(player.getName(), String.valueOf(result));
+
+                        System.out.println("Invalid Update request: " + clientRequest.data);
+
                         break;
 
                 }
