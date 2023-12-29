@@ -12,6 +12,7 @@ import dto.DTOPlayer;
 import dto.GameStatus;
 import dto.Invitation;
 import dto.Logout;
+import dto.NextStep;
 import dto.invitationResponseStatus;
 import sqlconnection.db.DBHandler;
 import java.io.DataInputStream;
@@ -111,15 +112,14 @@ class TicTacToeHandler extends Thread {
             this.ps = new PrintStream(clientSocket.getOutputStream());
 
             DBHandler dbHandler = new DBHandler();
-             while (true) {
-            String clientRequestBody = dis.readLine();
-            if (clientRequestBody != null) {
-                System.out.println(clientRequestBody + " ++++++++++++++++++++++++++");
-            }
-            ClientRequest clientRequest = new Gson().fromJson(clientRequestBody, ClientRequest.class);
+            while (true) {
+                String clientRequestBody = dis.readLine();
+                if (clientRequestBody != null) {
+                    System.out.println(clientRequestBody + " ++++++++++++++++++++++++++");
+                }
+                ClientRequest clientRequest = new Gson().fromJson(clientRequestBody, ClientRequest.class);
 
-            int result;
-
+                int result;
 
                 switch (clientRequest.request) {
                     case "signUp":
@@ -169,14 +169,19 @@ class TicTacToeHandler extends Thread {
                         Invitation ref = new Gson().fromJson(clientRequest.data, Invitation.class);
                         server.sendResponseToClient(ref.getPlayerName(), clientRequest.toJson());
                         break;
+                    case "nextStep":
+                        NextStep nextStep = new Gson().fromJson(clientRequest.data, NextStep.class);
+                        server.sendResponseToClient(nextStep.getOpponentName(), nextStep.toJson());
+                        System.out.println("Next step sent by  " + nextStep.getOpponentName());
+                        break;
                     case "signOut":
                         Logout playerStatus = new Gson().fromJson(clientRequest.data, Logout.class);
                         if (playerStatus != null && playerStatus.username != null) {
                             player.setName(playerStatus.username);
-                         
+
                             // player.setStatus("offline");
                             result = dbHandler.signOut(player);
-                           server.sendResponseToClient(player.getName(), String.valueOf(result));
+                            server.sendResponseToClient(player.getName(), String.valueOf(result));
                             closeThread();
                             server.removeClient(player.getName());
                         } else {
@@ -189,20 +194,19 @@ class TicTacToeHandler extends Thread {
 
         } catch (SocketException e) {
             // Handle socket closed gracefully
-             System.out.println("Socket closed");
+            System.out.println("Socket closed");
             //  Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "Socket closed", e);
         } catch (IOException ex) {
             Logger.getLogger(TicTacToeHandler.class.getName()).log(Level.SEVERE, "IO error", ex);
-        }
-        finally{
-        closeThread();
+        } finally {
+            closeThread();
         }
     }
     //close the thread and release resources
 
     private void closeThread() {
         try {
-          
+
             if (dis != null) {
                 dis.close();
             }
