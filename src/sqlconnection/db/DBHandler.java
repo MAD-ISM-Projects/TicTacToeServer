@@ -111,7 +111,7 @@ public class DBHandler {
         }
     }
 
-    private void updateStatus(String playerName, String status) throws SQLException {
+    public void updateStatus(String playerName, String status) throws SQLException {
         String sqlUpdate = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
         try (PreparedStatement updateStatement = connection.prepareStatement(sqlUpdate)) {
             updateStatement.setString(1, status);
@@ -166,23 +166,27 @@ public class DBHandler {
         return onlinePlayers;
     }
 
-    public boolean makePlayerBusy(DTOPlayer player1, DTOPlayer player2) {
-        try {
-            String sql = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or ROOT.PLAYERS SET STATUS = ? WHERE NAME = ?";
-            PreparedStatement pst = connection.prepareStatement(sql);
-            pst.setString(1, "busy");
-            pst.setString(2, player1.getName());
-            pst.setString(3, player2.getName());
+    public int makePlayerBusy(DTOPlayer player ) {
+        String sqlSelect = "UPDATE ROOT.PLAYERS SET STATUS = ? WHERE NAME = ? or STATUS =?";
+
+        try (PreparedStatement pst = connection.prepareStatement(sqlSelect)) {
+             pst.setString(1, "busy");
+             pst.setString(2, player.getName());
+             pst.setString(3, "online");
+            
             int rs = pst.executeUpdate();
-            System.out.println(" rs = " + rs);
-            return rs != 0;
+            if (rs > 0) {
+                return 1;
+            } else {
+                // Error in query execution
+                System.out.println("Logut failed: Database query error");
+                return -1;
+            }
         } catch (SQLException ex) {
             Logger.getLogger(DBHandler.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            return false;
+            return 0;
         }
     }
-
     public synchronized int getOnlineRate() throws SQLException {
         String sql = "SELECT COUNT(NAME) AS total FROM ROOT.PLAYERS WHERE STATUS = ?";
         PreparedStatement pst = connection.prepareStatement(sql);

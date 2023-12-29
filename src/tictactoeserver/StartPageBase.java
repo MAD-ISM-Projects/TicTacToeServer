@@ -225,7 +225,7 @@ public class StartPageBase extends AnchorPane {
 
     private void initPieChart(PieChart pieChart) {
         pieChart.setLayoutX(435.0);
-        pieChart.setLayoutY(62.0);
+        pieChart.setLayoutY(62.0); 
         pieChart.setPrefHeight(258.0);
         pieChart.setPrefWidth(366.0);
         int onlineValue = Integer.parseInt(online.getText());

@@ -55,4 +55,9 @@ public class ClientRequest extends GsonHandler {
         data = logout.toJson();
     }
 
+    public ClientRequest(String name, ClientRequestHeader request,String status) {
+        this.request = request.toString();
+        PlayerBusy PlayerBusy = new PlayerBusy(name,status);
+        data = PlayerBusy.toJson();
+    }
 }

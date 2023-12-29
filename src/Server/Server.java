@@ -2,7 +2,6 @@ package server;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import static com.sun.corba.se.spi.presentation.rmi.StubAdapter.request;
 //import static com.sun.xml.internal.ws.api.message.Packet.State.ClientRequest;
 
 import dto.Authentication;
@@ -12,6 +11,7 @@ import dto.DTOPlayer;
 import dto.GameStatus;
 import dto.Invitation;
 import dto.Logout;
+import dto.PlayerBusy;
 import dto.NextStep;
 import dto.invitationResponseStatus;
 import sqlconnection.db.DBHandler;
@@ -96,6 +96,7 @@ class TicTacToeHandler extends Thread {
     private Socket clientSocket;
     private Server server;
     private DTOPlayer player; // Declare the player variable here
+     private DTOPlayer playe2;
     String clientRequest;
 
     public TicTacToeHandler(Socket clientSocket, Server server) {
@@ -107,6 +108,7 @@ class TicTacToeHandler extends Thread {
     @Override
     public void run() {
         player = new DTOPlayer(); // Initialize the player object here
+        playe2 = new DTOPlayer();
         try {
             this.dis = new DataInputStream(clientSocket.getInputStream());
             this.ps = new PrintStream(clientSocket.getOutputStream());
@@ -188,7 +190,15 @@ class TicTacToeHandler extends Thread {
                             System.out.println("Invalid signOut request: " + clientRequest.data);
                         }
                         break;
-
+                       case "playerBusy":
+                        PlayerBusy busy = new Gson().fromJson(clientRequest.data, PlayerBusy.class);
+                            player.setName(busy.name);
+                            result = dbHandler.makePlayerBusy(player);
+                            server.sendResponseToClient(player.getName(), String.valueOf(result));
+                 
+                            System.out.println("Invalid Update request: " + clientRequest.data);
+                        
+                        break;
                 }
             }
 
